@@ -53,6 +53,10 @@ public class ItemService {
         return ItemMapper.itemToDto(itemRepository.updateItem(owner, itemId, item));
     }
 
+    public void deleteItem(long itemId) {
+        itemRepository.deleteItem(itemId);
+    }
+
     public List<ItemDto> searchItem(String query) {
         return itemRepository.searchItems(query).stream()
                 .map(ItemMapper::itemToDto)
