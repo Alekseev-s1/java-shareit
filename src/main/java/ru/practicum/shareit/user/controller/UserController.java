@@ -32,7 +32,7 @@ public class UserController {
         return userService.createUser(userDto);
     }
 
-    @PutMapping("/{userId}")
+    @PatchMapping("/{userId}")
     public UserDto updateUser(@PathVariable long userId,
                               @RequestBody UserDto userDto) {
         return userService.updateUser(userId, userDto);

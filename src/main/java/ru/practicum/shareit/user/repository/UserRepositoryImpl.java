@@ -8,7 +8,7 @@ import java.util.*;
 @Component
 public class UserRepositoryImpl implements UserRepository {
     private static final Map<Long, User> users = new HashMap<>();
-    private static long id;
+    private static long id = 0;
 
     @Override
     public List<User> findAll() {
