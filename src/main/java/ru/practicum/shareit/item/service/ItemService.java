@@ -11,7 +11,6 @@ import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,10 +62,6 @@ public class ItemService {
     }
 
     public List<ItemDto> searchItem(String query) {
-        if (query.isBlank()) {
-            return Collections.emptyList();
-        }
-
         return itemRepository.searchItems(query).stream()
                 .map(ItemMapper::itemToDto)
                 .collect(Collectors.toList());

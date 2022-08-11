@@ -79,7 +79,7 @@ public class ItemRepositoryImpl implements ItemRepository {
                 .filter(item -> item.getDescription().toLowerCase().contains(query.toLowerCase()))
                 .collect(Collectors.toList());
 
-        Set<Item> items = new HashSet<>();
+        Set<Item> items = new TreeSet<>(Comparator.comparingLong(Item::getId));
         items.addAll(foundByName);
         items.addAll(foundByDescription);
         return items;
