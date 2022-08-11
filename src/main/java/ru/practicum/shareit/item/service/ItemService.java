@@ -3,6 +3,7 @@ package ru.practicum.shareit.item.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.ItemNotFoundException;
+import ru.practicum.shareit.exception.WrongOwnerException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
@@ -10,6 +11,7 @@ import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,6 +51,9 @@ public class ItemService {
         User owner = userRepository.findUserById(userId)
                 .orElseThrow(() -> new ItemNotFoundException(
                         String.format("Пользователь с id = %d не найден", userId)));
+        ItemDto itemToUpdate = getItemById(itemId);
+        checkOwner(userId, itemToUpdate);
+
         Item item = ItemMapper.dtoToItem(itemDto);
         return ItemMapper.itemToDto(itemRepository.updateItem(owner, itemId, item));
     }
@@ -58,8 +63,21 @@ public class ItemService {
     }
 
     public List<ItemDto> searchItem(String query) {
+        if (query.isBlank()) {
+            return Collections.emptyList();
+        }
+
         return itemRepository.searchItems(query).stream()
                 .map(ItemMapper::itemToDto)
                 .collect(Collectors.toList());
+    }
+
+    private void checkOwner(long userId, ItemDto itemDto) {
+        if (itemDto.getOwner().getId() != userId) {
+            throw new WrongOwnerException(
+                    String.format("Пользователь с id = %d не является владельцем вещи с id = %d",
+                            userId,
+                            itemDto.getId()));
+        }
     }
 }

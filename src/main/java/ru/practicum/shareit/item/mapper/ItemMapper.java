@@ -11,17 +11,15 @@ public class ItemMapper {
         itemDto.setName(item.getName());
         itemDto.setDescription(item.getDescription());
         itemDto.setOwner(UserMapper.userToDto(item.getOwner()));
-        itemDto.setAvailable(item.isAvailable());
+        itemDto.setAvailable(item.getAvailable());
         return itemDto;
     }
 
     public static Item dtoToItem(ItemDto itemDto) {
         Item item = new Item();
-        item.setId(itemDto.getId());
         item.setName(itemDto.getName());
         item.setDescription(itemDto.getDescription());
-        item.setOwner(UserMapper.dtoToUser(itemDto.getOwner()));
-        item.setAvailable(itemDto.isAvailable());
+        item.setAvailable(itemDto.getAvailable());
         return item;
     }
 }

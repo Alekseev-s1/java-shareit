@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 public class ItemRepositoryImpl implements ItemRepository {
     private static final Map<Long, Item> items = new HashMap<>();
     private static final Map<Long, List<Long>> itemsByUser = new HashMap<>();
-    private static long id = 0;
+    private static long id = 1;
 
     @Override
     public List<Item> findItemsByUserId(long userId) {
@@ -43,10 +43,19 @@ public class ItemRepositoryImpl implements ItemRepository {
 
     @Override
     public Item updateItem(User user, long itemId, Item item) {
-        item.setOwner(user);
-        item.setId(itemId);
-        items.put(itemId, item);
-        return item;
+        Item itemToUpdate = items.get(itemId);
+
+        if (item.getName() != null) {
+            itemToUpdate.setName(item.getName());
+        }
+        if (item.getDescription() != null) {
+            itemToUpdate.setDescription(item.getDescription());
+        }
+        if (item.getAvailable() != null) {
+            itemToUpdate.setAvailable(item.getAvailable());
+        }
+
+        return itemToUpdate;
     }
 
     @Override
@@ -62,11 +71,11 @@ public class ItemRepositoryImpl implements ItemRepository {
     @Override
     public Set<Item> searchItems(String query) {
         List<Item> foundByName = items.values().stream()
-                .filter(Item::isAvailable)
+                .filter(item -> item.getAvailable().equals(true))
                 .filter(item -> item.getName().toLowerCase().contains(query.toLowerCase()))
                 .collect(Collectors.toList());
         List<Item> foundByDescription = items.values().stream()
-                .filter(Item::isAvailable)
+                .filter(item -> item.getAvailable().equals(true))
                 .filter(item -> item.getDescription().toLowerCase().contains(query.toLowerCase()))
                 .collect(Collectors.toList());
 

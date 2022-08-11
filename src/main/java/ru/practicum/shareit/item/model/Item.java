@@ -13,7 +13,7 @@ public class Item {
     private String name;
     private String description;
     private User owner;
-    private boolean available;
+    private Boolean available;
 
     @Override
     public boolean equals(Object o) {
@@ -21,10 +21,10 @@ public class Item {
         if (o == null || getClass() != o.getClass()) return false;
         Item item = (Item) o;
         return id == item.id
-                && available == item.available
                 && Objects.equals(name, item.name)
                 && Objects.equals(description, item.description)
-                && Objects.equals(owner, item.owner);
+                && Objects.equals(owner, item.owner)
+                && Objects.equals(available, item.available);
     }
 
     @Override

@@ -8,7 +8,7 @@ import java.util.*;
 @Component
 public class UserRepositoryImpl implements UserRepository {
     private static final Map<Long, User> users = new HashMap<>();
-    private static long id = 0;
+    private static long id = 1;
 
     @Override
     public List<User> findAll() {
@@ -21,6 +21,13 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public Optional<User> findUserByEmail(String email) {
+        return users.values().stream()
+                .filter(user -> user.getEmail().equals(email))
+                .findFirst();
+    }
+
+    @Override
     public User save(User user) {
         user.setId(id++);
         users.put(user.getId(), user);
@@ -29,9 +36,16 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public User update(long userId, User user) {
-        user.setId(userId);
-        users.put(userId, user);
-        return user;
+        User userToUpdate = users.get(userId);
+
+        if (user.getEmail() != null) {
+            userToUpdate.setEmail(user.getEmail());
+        }
+        if (user.getName() != null) {
+            userToUpdate.setName(user.getName());
+        }
+
+        return userToUpdate;
     }
 
     @Override
