@@ -67,7 +67,7 @@ public class ItemRepositoryImpl implements ItemRepository {
         return items.values().stream()
                 .filter(item -> item.getAvailable().equals(true))
                 .filter(item -> item.getName().toLowerCase().contains(query.toLowerCase())
-                || item.getDescription().toLowerCase().contains(query.toLowerCase()))
+                        || item.getDescription().toLowerCase().contains(query.toLowerCase()))
                 .sorted(Comparator.comparingLong(Item::getId))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
