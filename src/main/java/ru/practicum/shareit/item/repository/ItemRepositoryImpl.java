@@ -31,13 +31,7 @@ public class ItemRepositoryImpl implements ItemRepository {
         item.setOwner(user);
         item.setId(id++);
         items.put(item.getId(), item);
-        itemsByUser.compute(user.getId(), (userId, userItemsId) -> {
-            if (userItemsId == null) {
-                userItemsId = new ArrayList<>();
-            }
-            userItemsId.add(item.getId());
-            return userItemsId;
-        });
+        itemsByUser.computeIfAbsent(user.getId(), userId -> new ArrayList<>()).add(item.getId());
         return item;
     }
 
@@ -70,18 +64,11 @@ public class ItemRepositoryImpl implements ItemRepository {
 
     @Override
     public Set<Item> searchItems(String query) {
-        List<Item> foundByName = items.values().stream()
+        return items.values().stream()
                 .filter(item -> item.getAvailable().equals(true))
-                .filter(item -> item.getName().toLowerCase().contains(query.toLowerCase()))
-                .collect(Collectors.toList());
-        List<Item> foundByDescription = items.values().stream()
-                .filter(item -> item.getAvailable().equals(true))
-                .filter(item -> item.getDescription().toLowerCase().contains(query.toLowerCase()))
-                .collect(Collectors.toList());
-
-        Set<Item> items = new TreeSet<>(Comparator.comparingLong(Item::getId));
-        items.addAll(foundByName);
-        items.addAll(foundByDescription);
-        return items;
+                .filter(item -> item.getName().toLowerCase().contains(query.toLowerCase())
+                || item.getDescription().toLowerCase().contains(query.toLowerCase()))
+                .sorted(Comparator.comparingLong(Item::getId))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }

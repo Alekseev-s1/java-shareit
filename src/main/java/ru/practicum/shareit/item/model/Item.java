@@ -14,6 +14,7 @@ public class Item {
     private String description;
     private User owner;
     private Boolean available;
+    private long requestId;
 
     @Override
     public boolean equals(Object o) {

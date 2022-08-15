@@ -1,6 +1,7 @@
 package ru.practicum.shareit.user.repository;
 
 import org.springframework.stereotype.Component;
+import ru.practicum.shareit.exception.UniqueEmailException;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.*;
@@ -8,6 +9,7 @@ import java.util.*;
 @Component
 public class UserRepositoryImpl implements UserRepository {
     private static final Map<Long, User> users = new HashMap<>();
+    private final Set<String> uniqueEmails = new HashSet<>();
     private static long id = 1;
 
     @Override
@@ -29,8 +31,13 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public User save(User user) {
+        if (uniqueEmails.contains(user.getEmail())) {
+            throw new UniqueEmailException("Пользователь с таким email уже существует");
+        }
+
         user.setId(id++);
         users.put(user.getId(), user);
+        uniqueEmails.add(user.getEmail());
         return user;
     }
 
@@ -39,6 +46,11 @@ public class UserRepositoryImpl implements UserRepository {
         User userToUpdate = users.get(userId);
 
         if (user.getEmail() != null) {
+            if (uniqueEmails.contains(user.getEmail()) && !userToUpdate.getEmail().equals(user.getEmail())) {
+                throw new UniqueEmailException("Пользователь с таким email уже существует");
+            }
+            uniqueEmails.remove(userToUpdate.getEmail());
+            uniqueEmails.add(user.getEmail());
             userToUpdate.setEmail(user.getEmail());
         }
         if (user.getName() != null) {
@@ -50,6 +62,7 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public void delete(long userId) {
+        uniqueEmails.remove(users.get(userId).getEmail());
         users.remove(userId);
     }
 }
