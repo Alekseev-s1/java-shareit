@@ -2,6 +2,7 @@ package ru.practicum.shareit.item.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import ru.practicum.shareit.requests.dto.ItemRequestDto;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.validation.OnCreate;
 
@@ -23,5 +24,5 @@ public class ItemDto {
     @NotNull(groups = OnCreate.class, message = "Параметр available не может быть пустым")
     private Boolean available;
 
-    private long requestId;
+    private ItemRequestDto requestDto;
 }
