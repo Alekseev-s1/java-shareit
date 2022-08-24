@@ -1,6 +1,8 @@
 package ru.practicum.shareit.item.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -33,9 +35,9 @@ public class ItemController {
     }
 
     @PostMapping
-    public ItemDto createItem(@RequestHeader("X-Sharer-User-Id") long userId,
-                              @RequestBody @Validated(OnCreate.class) ItemDto itemDto) {
-        return itemService.createItem(userId, itemDto);
+    public ResponseEntity<ItemDto> createItem(@RequestHeader("X-Sharer-User-Id") long userId,
+                                     @RequestBody @Validated(OnCreate.class) ItemDto itemDto) {
+        return new ResponseEntity<>(itemService.createItem(userId, itemDto), HttpStatus.CREATED);
     }
 
     @PatchMapping("/{itemId}")

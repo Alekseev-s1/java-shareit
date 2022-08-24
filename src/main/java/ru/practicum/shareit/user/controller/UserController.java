@@ -1,6 +1,8 @@
 package ru.practicum.shareit.user.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -32,8 +34,8 @@ public class UserController {
     }
 
     @PostMapping
-    public UserDto createUser(@RequestBody @Validated(OnCreate.class) UserDto userDto) {
-        return userService.createUser(userDto);
+    public ResponseEntity<UserDto> createUser(@RequestBody @Validated(OnCreate.class) UserDto userDto) {
+        return new ResponseEntity<>(userService.createUser(userDto), HttpStatus.CREATED);
     }
 
     @PatchMapping("/{userId}")
