@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
-public class ItemRepositoryImpl implements ItemRepository {
+public class CustomItemRepositoryImpl implements CustomItemRepository {
     private static final Map<Long, Item> items = new HashMap<>();
     private static final Map<Long, List<Long>> itemsByUser = new HashMap<>();
     private static long id = 1;
