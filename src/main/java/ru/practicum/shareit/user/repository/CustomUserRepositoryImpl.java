@@ -1,7 +1,6 @@
 package ru.practicum.shareit.user.repository;
 
 import org.springframework.stereotype.Component;
-import ru.practicum.shareit.exception.UniqueEmailException;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.*;
@@ -31,10 +30,6 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
 
     @Override
     public User save(User user) {
-        if (uniqueEmails.contains(user.getEmail())) {
-            throw new UniqueEmailException("Пользователь с таким email уже существует");
-        }
-
         user.setId(id++);
         users.put(user.getId(), user);
         uniqueEmails.add(user.getEmail());
@@ -46,9 +41,6 @@ public class CustomUserRepositoryImpl implements CustomUserRepository {
         User userToUpdate = users.get(userId);
 
         if (user.getEmail() != null) {
-            if (uniqueEmails.contains(user.getEmail()) && !userToUpdate.getEmail().equals(user.getEmail())) {
-                throw new UniqueEmailException("Пользователь с таким email уже существует");
-            }
             uniqueEmails.remove(userToUpdate.getEmail());
             uniqueEmails.add(user.getEmail());
             userToUpdate.setEmail(user.getEmail());

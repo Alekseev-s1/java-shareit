@@ -8,49 +8,79 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.validation.ConstraintViolationException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @RestControllerAdvice
 public class ErrorHandler {
     @ExceptionHandler
-    public ResponseEntity<String> handleUniqueEmail(UniqueEmailException e) {
+    public ResponseEntity<Map<String, String>> handleItemNotFound(UnitNotFoundException e) {
         log.error(String.format("Ошибка %s: %s", e.getClass().getSimpleName(), e.getMessage()));
-        return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
+        Map<String, String> map = new HashMap<>();
+        map.put("error", e.getMessage());
+        return new ResponseEntity<>(map, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler
-    public ResponseEntity<String> handleItemNotFound(ItemNotFoundException e) {
+    public ResponseEntity<Map<String, String>> handleWrongOwner(WrongOwnerException e) {
         log.error(String.format("Ошибка %s: %s", e.getClass().getSimpleName(), e.getMessage()));
-        return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        Map<String, String> map = new HashMap<>();
+        map.put("error", e.getMessage());
+        return new ResponseEntity<>(map, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler
-    public ResponseEntity<String> handleWrongOwner(WrongOwnerException e) {
+    public ResponseEntity<Map<String, String>> handleItemUnavailable(ItemUnavailableException e) {
         log.error(String.format("Ошибка %s: %s", e.getClass().getSimpleName(), e.getMessage()));
-        return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+        Map<String, String> map = new HashMap<>();
+        map.put("error", e.getMessage());
+        return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
-    public ResponseEntity<List<String>> handleConstraintViolation(ConstraintViolationException e) {
-        List<String> errors = new ArrayList<>();
+    public ResponseEntity<Map<String, String>> handleStatusAlreadySet(StatusAlreadySetException e) {
+        log.error(String.format("Ошибка %s: %s", e.getClass().getSimpleName(), e.getMessage()));
+        Map<String, String> map = new HashMap<>();
+        map.put("error", e.getMessage());
+        return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<Map<String, String>> handleCrossDate(CrossDateException e) {
+        log.error(String.format("Ошибка %s: %s", e.getClass().getSimpleName(), e.getMessage()));
+        Map<String, String> map = new HashMap<>();
+        map.put("error", e.getMessage());
+        return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<Map<String, String>> handleWrongState(WrongBookingStateException e) {
+        log.error(String.format("Ошибка %s: %s", e.getClass().getSimpleName(), e.getMessage()));
+        Map<String, String> map = new HashMap<>();
+        map.put("error", e.getMessage());
+        return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<Map<String, String>> handleConstraintViolation(ConstraintViolationException e) {
+        Map<String, String> map = new HashMap<>();
         e.getConstraintViolations().forEach(error -> {
             log.error(String.format("Ошибка %s: %s", e.getClass().getSimpleName(), error.getMessage()));
             String message = error.getMessage();
-            errors.add(message);
+            map.put("error", message);
         });
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
-    public ResponseEntity<List<String>> handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
-        List<String> errors = new ArrayList<>();
+    public ResponseEntity<Map<String, String>> handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
+        Map<String, String> map = new HashMap<>();
         e.getBindingResult().getFieldErrors().forEach(error -> {
             log.error(String.format("Ошибка %s: %s", e.getClass().getSimpleName(), error.getDefaultMessage()));
             String message = error.getDefaultMessage();
-            errors.add(message);
+            map.put("error", message);
         });
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(map, HttpStatus.BAD_REQUEST);
     }
 }

@@ -2,8 +2,12 @@ package ru.practicum.shareit.user.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.item.model.Comment;
+import ru.practicum.shareit.item.model.Item;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Setter
 @Getter
@@ -15,9 +19,16 @@ public class User {
     @Column(name = "user_id")
     private long id;
 
-    @Column(name = "name")
     private String name;
 
-    @Column(name = "email")
     private String email;
+
+    @OneToMany(mappedBy = "owner")
+    private List<Item> items;
+
+    @OneToMany(mappedBy = "booker")
+    private List<Booking> bookings;
+
+    @OneToMany(mappedBy = "author")
+    private List<Comment> comments;
 }
