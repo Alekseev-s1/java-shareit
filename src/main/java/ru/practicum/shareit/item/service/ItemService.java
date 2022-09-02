@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
@@ -37,12 +38,10 @@ public class ItemService {
         this.commentRepository = commentRepository;
     }
 
-    @Transactional(readOnly = true)
     public List<Item> getItemsByUserId(long userId) {
         return itemRepository.findItemsByOwner_Id(userId, Sort.by(Sort.Direction.ASC, "id"));
     }
 
-    @Transactional(readOnly = true)
     public Item getItemById(long itemId) {
         return itemRepository.findById(itemId)
                 .orElseThrow(() -> new UnitNotFoundException(
@@ -73,14 +72,15 @@ public class ItemService {
         if (item.getDescription() != null) {
             itemToUpdate.setDescription(item.getDescription());
         }
-        if (item.getAvailable() != null) {
-            itemToUpdate.setAvailable(item.getAvailable());
-        }
+        itemToUpdate.setAvailable(item.isAvailable());
+        /*if (item.isAvailable() != itemToUpdate.isAvailable()) {
+            itemToUpdate.setAvailable(item.isAvailable());
+        }*/
         if (item.getRequest() != null) {
             itemToUpdate.setRequest(item.getRequest());
         }
 
-        return itemRepository.save(itemToUpdate);
+        return itemToUpdate;
     }
 
     @Transactional
@@ -89,7 +89,6 @@ public class ItemService {
         itemRepository.delete(item);
     }
 
-    @Transactional(readOnly = true)
     public List<Item> searchItem(String query) {
         return itemRepository.searchItems(query);
     }
@@ -112,12 +111,10 @@ public class ItemService {
 
         comment.setItem(item);
         comment.setAuthor(user);
-        comment.setCreatedAt(LocalDateTime.now());
 
         return commentRepository.save(comment);
     }
 
-    @Transactional(readOnly = true)
     public void addBookings(Item item, long userId) {
         if (item.getBookings() != null) {
 

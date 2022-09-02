@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class BookingService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
@@ -34,7 +35,6 @@ public class BookingService {
         this.itemRepository = itemRepository;
     }
 
-    @Transactional(readOnly = true)
     public Booking getBookingById(long bookingId, long userId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new UnitNotFoundException(
@@ -52,14 +52,12 @@ public class BookingService {
         return booking;
     }
 
-    @Transactional(readOnly = true)
-    public List<Booking> getBookings(String state, long userId) {
+    public List<Booking> getBookings(BookingState state, long userId) {
         getUserById(userId);
-        BookingState bookingState = BookingState.lookup(state);
         Sort sorting = Sort.by(Sort.Direction.DESC, "start");
         LocalDateTime now = LocalDateTime.now();
 
-        switch (bookingState) {
+        switch (state) {
             case ALL:
                 return bookingRepository.findBookingsByBooker_Id(userId,
                         sorting);
@@ -85,14 +83,12 @@ public class BookingService {
                         now,
                         sorting);
             default:
-                return Collections.emptyList();
+                throw new WrongBookingStateException("Unknown state: " + state);
         }
     }
 
-    @Transactional(readOnly = true)
-    public List<Booking> getBookingsByItemOwner(String state, long userId) {
+    public List<Booking> getBookingsByItemOwner(BookingState state, long userId) {
         getUserById(userId);
-        BookingState bookingState = BookingState.lookup(state);
         List<Long> userItemsId = itemRepository.findItemsByOwner_Id(userId).stream()
                 .map(Item::getId)
                 .collect(Collectors.toList());
@@ -103,7 +99,7 @@ public class BookingService {
             return Collections.emptyList();
         }
 
-        switch (bookingState) {
+        switch (state) {
             case ALL:
                 return bookingRepository.findBookingsByItem_IdIn(userItemsId,
                         sorting);
@@ -129,7 +125,7 @@ public class BookingService {
                         now,
                         sorting);
             default:
-                return Collections.emptyList();
+                throw new WrongBookingStateException("Unknown state: " + state);
         }
     }
 
@@ -137,7 +133,7 @@ public class BookingService {
     public Booking createBooking(long userId, Booking booking) {
         enrichBooking(userId, booking);
 
-        if (!booking.getItem().getAvailable()) {
+        if (!booking.getItem().isAvailable()) {
             throw new ItemUnavailableException("Данная вещь недоступна для бронирования");
         }
         if (booking.getItem().getOwner().getId() == userId) {
@@ -173,7 +169,7 @@ public class BookingService {
             booking.setStatus(BookingStatus.REJECTED);
         }
 
-        return bookingRepository.save(booking);
+        return booking;
     }
 
     private boolean checkItemOwner(long userId, Item item) {

@@ -4,11 +4,8 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
-import ru.practicum.shareit.booking.dto.ItemBookingDto;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.mapper.UserMapper;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BookingMapper {
@@ -28,23 +25,11 @@ public class BookingMapper {
         BookingResponseDto bookingDto = new BookingResponseDto();
 
         bookingDto.setId(booking.getId());
-        bookingDto.setItem(ItemMapper.itemToDto(booking.getItem()));
+        bookingDto.setItem(new BookingResponseDto.Item(booking.getItem().getId(), booking.getItem().getName()));
         bookingDto.setStart(booking.getStart());
         bookingDto.setEnd(booking.getEnd());
-        bookingDto.setBooker(UserMapper.userToDto(booking.getBooker()));
+        bookingDto.setBooker(new BookingResponseDto.Booker(booking.getBooker().getId(), booking.getBooker().getName()));
         bookingDto.setStatus(booking.getStatus());
-        return bookingDto;
-    }
-
-    public static ItemBookingDto bookingToItemBookingDto(Booking booking) {
-        if (booking == null) {
-            return null;
-        }
-
-        ItemBookingDto bookingDto = new ItemBookingDto();
-
-        bookingDto.setId(booking.getId());
-        bookingDto.setBookerId(booking.getBooker().getId());
         return bookingDto;
     }
 }

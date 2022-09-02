@@ -10,6 +10,7 @@ import ru.practicum.shareit.user.repository.UserRepository;
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class UserService {
     private final UserRepository userRepository;
 
@@ -18,18 +19,15 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    @Transactional(readOnly = true)
     public List<User> getUsers() {
         return userRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
     public User getUserById(long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UnitNotFoundException(
                         String.format("Пользователь с id = %d не найден", userId)));
     }
-
 
     @Transactional
     public User createUser(User user) {
@@ -45,7 +43,7 @@ public class UserService {
         if (user.getEmail() != null) {
             userToUpdate.setEmail(user.getEmail());
         }
-        return userRepository.save(userToUpdate);
+        return userToUpdate;
     }
 
     @Transactional

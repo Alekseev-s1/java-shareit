@@ -1,6 +1,7 @@
 package ru.practicum.shareit.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -55,10 +56,11 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    public ResponseEntity<Map<String, String>> handleWrongState(WrongBookingStateException e) {
+    public ResponseEntity<Map<String, String>> handleConversionFailed(ConversionFailedException e) {
         log.error(String.format("Ошибка %s: %s", e.getClass().getSimpleName(), e.getMessage()));
         Map<String, String> map = new HashMap<>();
-        map.put("error", e.getMessage());
+        String message = "Unknown state: " + e.getValue();
+        map.put("error", message);
         return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 

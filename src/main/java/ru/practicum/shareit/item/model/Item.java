@@ -28,7 +28,7 @@ public class Item {
     @JoinColumn(name = "owner_id", referencedColumnName = "user_id")
     private User owner;
 
-    private Boolean available;
+    private boolean available;
 
     @Transient
     private Booking lastBooking;

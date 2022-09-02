@@ -2,7 +2,6 @@ package ru.practicum.shareit.item.mapper;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.item.dto.ItemRequestDto;
 import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.model.Item;
@@ -19,9 +18,15 @@ public class ItemMapper {
         itemDto.setName(item.getName());
         itemDto.setDescription(item.getDescription());
         itemDto.setOwner(UserMapper.userToDto(item.getOwner()));
-        itemDto.setAvailable(item.getAvailable());
-        itemDto.setLastBooking(BookingMapper.bookingToItemBookingDto(item.getLastBooking()));
-        itemDto.setNextBooking(BookingMapper.bookingToItemBookingDto(item.getNextBooking()));
+        itemDto.setAvailable(item.isAvailable());
+        if (item.getLastBooking() != null) {
+            itemDto.setLastBooking(new ItemResponseDto.Booking(item.getLastBooking().getId(),
+                    item.getLastBooking().getBooker().getId()));
+        }
+        if (item.getNextBooking() != null) {
+            itemDto.setNextBooking(new ItemResponseDto.Booking(item.getNextBooking().getId(),
+                    item.getNextBooking().getBooker().getId()));
+        }
         if (item.getComments() != null) {
             itemDto.setComments(item.getComments().stream()
                     .map(CommentMapper::commentToDto)
@@ -35,7 +40,11 @@ public class ItemMapper {
 
         item.setName(itemDto.getName());
         item.setDescription(itemDto.getDescription());
-        item.setAvailable(itemDto.getAvailable());
+        if (itemDto.getAvailable() == null) {
+            item.setAvailable(true);
+        } else {
+            item.setAvailable(itemDto.getAvailable());
+        }
         return item;
     }
 }

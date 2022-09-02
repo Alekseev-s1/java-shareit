@@ -3,6 +3,7 @@ package ru.practicum.shareit.booking.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.validation.constraints.Future;
 import javax.validation.constraints.FutureOrPresent;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
@@ -20,6 +21,6 @@ public class BookingRequestDto {
     private LocalDateTime start;
 
     @NotNull(message = "Необходимо указать дату окончания бронирования (end)")
-    @FutureOrPresent(message = "Дата окончания бронирования не может быть в прошлом")
+    @Future(message = "Дата окончания бронирования не может быть в прошлом")
     private LocalDateTime end;
 }
