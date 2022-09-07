@@ -73,9 +73,6 @@ public class ItemService {
             itemToUpdate.setDescription(item.getDescription());
         }
         itemToUpdate.setAvailable(item.isAvailable());
-        /*if (item.isAvailable() != itemToUpdate.isAvailable()) {
-            itemToUpdate.setAvailable(item.isAvailable());
-        }*/
         if (item.getRequest() != null) {
             itemToUpdate.setRequest(item.getRequest());
         }
@@ -116,14 +113,13 @@ public class ItemService {
     }
 
     public void addBookings(Item item, long userId) {
-        if (item.getBookings() != null) {
+        if (item.getBookings() != null && item.getOwner().getId() == userId) {
 
             item.setLastBooking(
                     bookingRepository.findBookingsByItem_IdAndStartIsBeforeAndStatus(item.getId(),
                                     LocalDateTime.now(),
                                     BookingStatus.APPROVED,
                                     Sort.by(Sort.Direction.DESC, "start")).stream()
-                            .filter(booking -> booking.getBooker().getId() != userId)
                             .findFirst()
                             .orElse(null));
 
@@ -132,7 +128,6 @@ public class ItemService {
                                     LocalDateTime.now(),
                                     BookingStatus.APPROVED,
                                     Sort.by(Sort.Direction.ASC, "start")).stream()
-                            .filter(booking -> booking.getBooker().getId() != userId)
                             .findFirst()
                             .orElse(null));
         }
