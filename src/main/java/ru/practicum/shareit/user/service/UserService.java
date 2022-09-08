@@ -2,16 +2,16 @@ package ru.practicum.shareit.user.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.ItemNotFoundException;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.mapper.UserMapper;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
-import java.util.stream.Collectors;
+
+import static ru.practicum.shareit.exception.UnitNotFoundException.unitNotFoundException;
 
 @Service
+@Transactional(readOnly = true)
 public class UserService {
     private final UserRepository userRepository;
 
@@ -20,41 +20,35 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public List<UserDto> getUsers() {
-        List<User> users = userRepository.findAll();
-        return users.stream()
-                .map(UserMapper::userToDto)
-                .collect(Collectors.toList());
+    public List<User> getUsers() {
+        return userRepository.findAll();
     }
 
-    public UserDto getUserById(long userId) {
-        return userRepository.findUserById(userId)
-                .map(UserMapper::userToDto)
-                .orElseThrow(() -> new ItemNotFoundException(
-                        String.format("Пользователь с id = %d не найден", userId)));
+    public User getUserById(long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(unitNotFoundException("Пользователь с id = {0} не найден", userId));
     }
 
-    public UserDto getUserByEmail(String email) {
-        return userRepository.findUserByEmail(email)
-                .map(UserMapper::userToDto)
-                .orElse(null);
+    @Transactional
+    public User createUser(User user) {
+        return userRepository.save(user);
     }
 
-    public UserDto createUser(UserDto userDto) {
-        User user = UserMapper.dtoToUser(userDto);
-        return UserMapper.userToDto(userRepository.save(user));
+    @Transactional
+    public User updateUser(long userId, User user) {
+        User userToUpdate = getUserById(userId);
+        if (user.getName() != null) {
+            userToUpdate.setName(user.getName());
+        }
+        if (user.getEmail() != null) {
+            userToUpdate.setEmail(user.getEmail());
+        }
+        return userToUpdate;
     }
 
-    public UserDto updateUser(long userId, UserDto userDto) {
-        getUserById(userId);
-
-        User user = UserMapper.dtoToUser(userDto);
-        return UserMapper.userToDto(userRepository.update(userId, user));
-    }
-
+    @Transactional
     public void deleteUser(long userId) {
-        getUserById(userId);
-
-        userRepository.delete(userId);
+        User user = getUserById(userId);
+        userRepository.delete(user);
     }
 }
