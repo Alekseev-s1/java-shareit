@@ -3,11 +3,12 @@ package ru.practicum.shareit.user.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.exception.UnitNotFoundException;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
+
+import static ru.practicum.shareit.exception.UnitNotFoundException.unitNotFoundException;
 
 @Service
 @Transactional(readOnly = true)
@@ -25,8 +26,7 @@ public class UserService {
 
     public User getUserById(long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new UnitNotFoundException(
-                        String.format("Пользователь с id = %d не найден", userId)));
+                .orElseThrow(unitNotFoundException("Пользователь с id = {0} не найден", userId));
     }
 
     @Transactional

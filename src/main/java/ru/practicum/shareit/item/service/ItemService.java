@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.ItemUnavailableException;
-import ru.practicum.shareit.exception.UnitNotFoundException;
 import ru.practicum.shareit.exception.WrongOwnerException;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
@@ -18,6 +17,8 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+import static ru.practicum.shareit.exception.UnitNotFoundException.unitNotFoundException;
 
 @Service
 @Transactional(readOnly = true)
@@ -44,15 +45,12 @@ public class ItemService {
 
     public Item getItemById(long itemId) {
         return itemRepository.findById(itemId)
-                .orElseThrow(() -> new UnitNotFoundException(
-                        String.format("Вещь с id = %d не найдена", itemId)));
+                .orElseThrow(unitNotFoundException("Вещь с id = {0} не найдена", itemId));
     }
 
     @Transactional
     public Item createItem(long userId, Item item) {
-        User owner = userRepository.findById(userId)
-                .orElseThrow(() -> new UnitNotFoundException(
-                        String.format("Пользователь с id = %d не найден", userId)));
+        User owner = getUserById(userId);
         item.setOwner(owner);
         return itemRepository.save(item);
     }
@@ -93,9 +91,7 @@ public class ItemService {
     @Transactional
     public Comment addComment(long itemId, long userId, Comment comment) {
         Item item = getItemById(itemId);
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UnitNotFoundException(
-                        String.format("Пользователь с id = %d не найден", userId)));
+        User user = getUserById(userId);
 
         if (user.getBookings().stream().noneMatch(booking -> booking.getItem().equals(item)
                 && booking.getStatus().equals(BookingStatus.APPROVED)
@@ -135,5 +131,10 @@ public class ItemService {
 
     private boolean checkOwner(long userId, Item item) {
         return item.getOwner().getId() == userId;
+    }
+
+    private User getUserById(long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(unitNotFoundException("Пользователь с id = {0} не найден", userId));
     }
 }

@@ -19,6 +19,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static ru.practicum.shareit.exception.UnitNotFoundException.unitNotFoundException;
+
 @Service
 @Transactional(readOnly = true)
 public class BookingService {
@@ -37,8 +39,7 @@ public class BookingService {
 
     public Booking getBookingById(long bookingId, long userId) {
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new UnitNotFoundException(
-                        String.format("Запись бронирования с id = %d не найдена", bookingId)));
+                .orElseThrow(unitNotFoundException("Запись бронирования с id = {0} не найдена", bookingId));
         Item item = booking.getItem();
 
         if (!(checkItemOwner(userId, item) || checkBookingOwner(userId, booking))) {
@@ -180,21 +181,17 @@ public class BookingService {
         return booking.getBooker().getId() == userId;
     }
 
-    private void getUserById(long userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new UnitNotFoundException(
-                        String.format("Пользователь с id = %d не найден", userId)));
-    }
-
     private void enrichBooking(long userId, Booking booking) {
-        User booker = userRepository.findById(userId)
-                .orElseThrow(() -> new UnitNotFoundException(
-                        String.format("Пользователь с id = %d не найден", userId)));
+        User booker = getUserById(userId);
         Item item = itemRepository.findById(booking.getItem().getId())
-                .orElseThrow(() -> new UnitNotFoundException(
-                        String.format("Вещь с id = %d не найдена", booking.getItem().getId())));
+                        .orElseThrow(unitNotFoundException("Вещь с id = {0} не найдена", booking.getItem().getId()));
 
         booking.setBooker(booker);
         booking.setItem(item);
+    }
+
+    private User getUserById(long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(unitNotFoundException("Пользователь с id = {0} не найден", userId));
     }
 }
