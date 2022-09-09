@@ -1,6 +1,7 @@
 package ru.practicum.shareit.booking.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
@@ -9,9 +10,12 @@ import ru.practicum.shareit.booking.model.BookingState;
 import ru.practicum.shareit.booking.service.BookingService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Validated
 @RestController
 @RequestMapping(path = "/bookings")
 public class BookingController {
@@ -30,16 +34,20 @@ public class BookingController {
 
     @GetMapping
     public List<BookingResponseDto> getBookings(@RequestParam(defaultValue = "ALL") BookingState state,
+                                                @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+                                                @RequestParam(defaultValue = "10") @Positive int size,
                                                 @RequestHeader("X-Sharer-User-Id") long userId) {
-        return bookingService.getBookings(state, userId).stream()
+        return bookingService.getBookings(state, userId, from, size).stream()
                 .map(BookingMapper::bookingToDto)
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/owner")
     public List<BookingResponseDto> getBookingByItemOwner(@RequestParam(defaultValue = "ALL") BookingState state,
+                                                          @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+                                                          @RequestParam(defaultValue = "10") @Positive int size,
                                                           @RequestHeader("X-Sharer-User-Id") long userId) {
-        return bookingService.getBookingsByItemOwner(state, userId).stream()
+        return bookingService.getBookingsByItemOwner(state, userId, from, size).stream()
                 .map(BookingMapper::bookingToDto)
                 .collect(Collectors.toList());
     }

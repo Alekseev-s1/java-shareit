@@ -17,26 +17,32 @@ import ru.practicum.shareit.validation.OnCreate;
 import ru.practicum.shareit.validation.OnUpdate;
 
 import javax.validation.Valid;
-import java.util.Collections;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Validated
 @RestController
 @RequestMapping("/items")
-@Validated
 public class ItemController {
     private final ItemService itemService;
+    private final ItemMapper itemMapper;
 
     @Autowired
-    public ItemController(ItemService itemService) {
+    public ItemController(ItemService itemService,
+                          ItemMapper itemMapper) {
         this.itemService = itemService;
+        this.itemMapper = itemMapper;
     }
 
     @GetMapping
-    public List<ItemResponseDto> getUserItems(@RequestHeader("X-Sharer-User-Id") long userId) {
-        return itemService.getItemsByUserId(userId).stream()
+    public List<ItemResponseDto> getUserItems(@RequestHeader("X-Sharer-User-Id") long userId,
+                                              @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+                                              @RequestParam(defaultValue = "10") @Positive int size) {
+        return itemService.getItemsByUserId(userId, from, size).stream()
                 .peek(item -> itemService.addBookings(item, userId))
-                .map(ItemMapper::itemToDto)
+                .map(itemMapper::itemToDto)
                 .collect(Collectors.toList());
     }
 
@@ -45,13 +51,13 @@ public class ItemController {
                                        @RequestHeader("X-Sharer-User-Id") long userId) {
         Item item = itemService.getItemById(itemId);
         itemService.addBookings(item, userId);
-        return ItemMapper.itemToDto(item);
+        return itemMapper.itemToDto(item);
     }
 
     @PostMapping
     public ResponseEntity<ItemResponseDto> createItem(@RequestHeader("X-Sharer-User-Id") long userId,
                                                       @RequestBody @Validated(OnCreate.class) ItemRequestDto itemDto) {
-        return new ResponseEntity<>(ItemMapper.itemToDto(itemService.createItem(userId, ItemMapper.dtoToItem(itemDto))),
+        return new ResponseEntity<>(itemMapper.itemToDto(itemService.createItem(userId, itemMapper.dtoToItem(itemDto))),
                 HttpStatus.CREATED);
     }
 
@@ -59,9 +65,9 @@ public class ItemController {
     public ItemResponseDto updateItem(@RequestHeader("X-Sharer-User-Id") long userId,
                                       @PathVariable long itemId,
                                       @RequestBody @Validated(OnUpdate.class) ItemRequestDto itemDto) {
-        return ItemMapper.itemToDto(itemService.updateItem(userId,
+        return itemMapper.itemToDto(itemService.updateItem(userId,
                 itemId,
-                ItemMapper.dtoToItem(itemDto)));
+                itemMapper.dtoToItem(itemDto)));
     }
 
     @DeleteMapping("/{itemId}")
@@ -70,12 +76,11 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public List<ItemResponseDto> searchItems(@RequestParam String text) {
-        if (text.isBlank()) {
-            return Collections.emptyList();
-        }
-        return itemService.searchItem(text).stream()
-                .map(ItemMapper::itemToDto)
+    public List<ItemResponseDto> searchItems(@RequestParam String text,
+                                             @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+                                             @RequestParam(defaultValue = "10") @Positive int size) {
+        return itemService.searchItem(text, from, size).stream()
+                .map(itemMapper::itemToDto)
                 .collect(Collectors.toList());
     }
 

@@ -1,6 +1,8 @@
 package ru.practicum.shareit.item.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,8 +16,10 @@ import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.utils.CustomPageable;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import static ru.practicum.shareit.exception.UnitNotFoundException.unitNotFoundException;
@@ -39,12 +43,14 @@ public class ItemService {
         this.commentRepository = commentRepository;
     }
 
-    public List<Item> getItemsByUserId(long userId) {
-        return itemRepository.findItemsByOwner_Id(userId, Sort.by(Sort.Direction.ASC, "id"));
+    public List<Item> getItemsByUserId(long userId, int from, int size) {
+        return itemRepository
+                .findItemsByOwner_Id(userId, CustomPageable.of(from, size, Sort.by(Sort.Direction.ASC, "id")));
     }
 
     public Item getItemById(long itemId) {
-        return itemRepository.findById(itemId)
+        return itemRepository
+                .findById(itemId)
                 .orElseThrow(unitNotFoundException("Вещь с id = {0} не найдена", itemId));
     }
 
@@ -61,7 +67,9 @@ public class ItemService {
 
         if (!checkOwner(userId, itemToUpdate)) {
             throw new WrongOwnerException(
-                    String.format("Пользователь с id = %d не является владельцем вещи с id = %d", userId, item.getId()));
+                    String.format("Пользователь с id = %d не является владельцем вещи с id = %d",
+                            userId,
+                            item.getId()));
         }
 
         if (item.getName() != null) {
@@ -84,8 +92,13 @@ public class ItemService {
         itemRepository.delete(item);
     }
 
-    public List<Item> searchItem(String query) {
-        return itemRepository.searchItems(query);
+    public List<Item> searchItem(String query, int from, int size) {
+        if (query.isBlank()) {
+            return Collections.emptyList();
+        }
+
+        return itemRepository
+                .searchItems(query, CustomPageable.of(from, size, Sort.by(Sort.Direction.ASC, "id")));
     }
 
     @Transactional
@@ -112,7 +125,8 @@ public class ItemService {
         if (item.getBookings() != null && item.getOwner().getId() == userId) {
 
             item.setLastBooking(
-                    bookingRepository.findBookingsByItem_IdAndStartIsBeforeAndStatus(item.getId(),
+                    bookingRepository
+                            .findBookingsByItem_IdAndStartIsBeforeAndStatus(item.getId(),
                                     LocalDateTime.now(),
                                     BookingStatus.APPROVED,
                                     Sort.by(Sort.Direction.DESC, "start")).stream()
@@ -120,7 +134,8 @@ public class ItemService {
                             .orElse(null));
 
             item.setNextBooking(
-                    bookingRepository.findBookingsByItem_IdAndStartIsAfterAndStatus(item.getId(),
+                    bookingRepository
+                            .findBookingsByItem_IdAndStartIsAfterAndStatus(item.getId(),
                                     LocalDateTime.now(),
                                     BookingStatus.APPROVED,
                                     Sort.by(Sort.Direction.ASC, "start")).stream()
@@ -134,7 +149,8 @@ public class ItemService {
     }
 
     private User getUserById(long userId) {
-        return userRepository.findById(userId)
+        return userRepository
+                .findById(userId)
                 .orElseThrow(unitNotFoundException("Пользователь с id = {0} не найден", userId));
     }
 }

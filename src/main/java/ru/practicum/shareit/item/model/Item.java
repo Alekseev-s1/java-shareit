@@ -30,13 +30,7 @@ public class Item {
 
     private boolean available;
 
-    @Transient
-    private Booking lastBooking;
-
-    @Transient
-    private Booking nextBooking;
-
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "request_id", referencedColumnName = "request_id")
     private ItemRequest request;
 
@@ -45,6 +39,12 @@ public class Item {
 
     @OneToMany(mappedBy = "item")
     private List<Comment> comments;
+
+    @Transient
+    private Booking lastBooking;
+
+    @Transient
+    private Booking nextBooking;
 
     @Override
     public boolean equals(Object o) {

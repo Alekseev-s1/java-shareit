@@ -25,7 +25,8 @@ public class UserService {
     }
 
     public User getUserById(long userId) {
-        return userRepository.findById(userId)
+        return userRepository
+                .findById(userId)
                 .orElseThrow(unitNotFoundException("Пользователь с id = {0} не найден", userId));
     }
 
@@ -50,5 +51,11 @@ public class UserService {
     public void deleteUser(long userId) {
         User user = getUserById(userId);
         userRepository.delete(user);
+    }
+
+    public void checkUserExists(long userId) {
+        userRepository
+                .findById(userId)
+                .orElseThrow(unitNotFoundException("Пользователь с id = {0} не найден", userId));
     }
 }
