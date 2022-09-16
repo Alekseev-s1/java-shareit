@@ -8,8 +8,6 @@ public class CustomPageable implements Pageable {
     private final int limit;
     private final Sort sort;
 
-    private final static int DEFAULT_PAGE_SIZE = 10;
-
     private CustomPageable(int offset, int limit, Sort sort) {
         this.offset = offset;
         this.limit = limit;
