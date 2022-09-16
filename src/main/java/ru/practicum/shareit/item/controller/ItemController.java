@@ -84,7 +84,7 @@ public class ItemController {
                 .collect(Collectors.toList());
     }
 
-    @PostMapping("{itemId}/comment")
+    @PostMapping("/{itemId}/comment")
     public CommentResponseDto addComment(@PathVariable long itemId,
                                          @RequestHeader("X-Sharer-User-Id") long userId,
                                          @RequestBody @Valid CommentRequestDto commentDto) {

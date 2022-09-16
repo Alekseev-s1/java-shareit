@@ -43,10 +43,10 @@ public class BookingController {
     }
 
     @GetMapping("/owner")
-    public List<BookingResponseDto> getBookingByItemOwner(@RequestParam(defaultValue = "ALL") BookingState state,
-                                                          @RequestParam(defaultValue = "0") @PositiveOrZero int from,
-                                                          @RequestParam(defaultValue = "10") @Positive int size,
-                                                          @RequestHeader("X-Sharer-User-Id") long userId) {
+    public List<BookingResponseDto> getBookingsByItemOwner(@RequestParam(defaultValue = "ALL") BookingState state,
+                                                           @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+                                                           @RequestParam(defaultValue = "10") @Positive int size,
+                                                           @RequestHeader("X-Sharer-User-Id") long userId) {
         return bookingService.getBookingsByItemOwner(state, userId, from, size).stream()
                 .map(BookingMapper::bookingToDto)
                 .collect(Collectors.toList());

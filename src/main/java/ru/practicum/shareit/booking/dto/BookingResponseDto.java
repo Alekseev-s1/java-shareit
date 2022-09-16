@@ -1,5 +1,6 @@
 package ru.practicum.shareit.booking.dto;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 
 @Setter
 @Getter
+@Builder
 public class BookingResponseDto {
     private long id;
     private Item item;

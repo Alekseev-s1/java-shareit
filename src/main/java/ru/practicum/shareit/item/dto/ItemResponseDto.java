@@ -1,15 +1,16 @@
 package ru.practicum.shareit.item.dto;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
-import ru.practicum.shareit.requests.dto.ItemReqRequestDto;
 import ru.practicum.shareit.user.dto.UserDto;
 
 import java.util.List;
 
 @Getter
 @Setter
+@Builder
 public class ItemResponseDto {
     private long id;
     private String name;

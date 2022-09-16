@@ -1,4 +1,4 @@
-package ru.practicum.shareit.utils;
+package ru.practicum.shareit.pageable;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;

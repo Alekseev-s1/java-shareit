@@ -59,6 +59,6 @@ public class ItemRequestController {
                                                 @RequestBody @Valid ItemReqRequestDto itemRequestDto) {
         userService.checkUserExists(userId);
         return ItemRequestMapper.itemRequestToDto(
-                itemRequestService.createItem(userId, ItemRequestMapper.dtoToItemRequest(itemRequestDto)));
+                itemRequestService.createItemRequest(userId, ItemRequestMapper.dtoToItemRequest(itemRequestDto)));
     }
 }

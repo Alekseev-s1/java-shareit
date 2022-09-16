@@ -11,8 +11,6 @@ import java.time.LocalDateTime;
 @Setter
 @Getter
 public class BookingRequestDto {
-    private long id;
-
     @NotNull(message = "Необходимо указать itemId для бронирования")
     private Long itemId;
 

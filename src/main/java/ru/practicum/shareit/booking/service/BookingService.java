@@ -1,7 +1,6 @@
 package ru.practicum.shareit.booking.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -13,9 +12,9 @@ import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.pageable.CustomPageable;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
-import ru.practicum.shareit.utils.CustomPageable;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -41,6 +40,7 @@ public class BookingService {
     }
 
     public Booking getBookingById(long bookingId, long userId) {
+        getUserById(userId);
         Booking booking = bookingRepository
                 .findById(bookingId)
                 .orElseThrow(unitNotFoundException("Запись бронирования с id = {0} не найдена", bookingId));

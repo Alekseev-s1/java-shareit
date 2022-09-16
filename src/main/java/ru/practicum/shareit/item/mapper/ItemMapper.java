@@ -20,37 +20,39 @@ public class ItemMapper {
     }
 
     public ItemResponseDto itemToDto(Item item) {
-        ItemResponseDto itemDto = new ItemResponseDto();
+        ItemResponseDto.ItemResponseDtoBuilder dtoBuilder = ItemResponseDto.builder();
 
-        itemDto.setId(item.getId());
-        itemDto.setName(item.getName());
-        itemDto.setDescription(item.getDescription());
-        itemDto.setOwner(UserMapper.userToDto(item.getOwner()));
-        itemDto.setAvailable(item.isAvailable());
+        dtoBuilder
+                .id(item.getId())
+                .name(item.getName())
+                .description(item.getDescription())
+                .owner(UserMapper.userToDto(item.getOwner()))
+                .available(item.isAvailable());
 
         if (item.getRequest() != null) {
-            itemDto.setRequestId(item.getRequest().getId());
+            dtoBuilder.requestId(item.getRequest().getId());
         }
 
         if (item.getLastBooking() != null) {
             ItemResponseDto.Booking lastBooking = new ItemResponseDto.Booking(item.getLastBooking().getId(),
                     item.getLastBooking().getBooker().getId());
-            itemDto.setLastBooking(lastBooking);
+            dtoBuilder.lastBooking(lastBooking);
         }
 
         if (item.getNextBooking() != null) {
             ItemResponseDto.Booking nextBooking = new ItemResponseDto.Booking(item.getNextBooking().getId(),
                     item.getNextBooking().getBooker().getId());
-            itemDto.setNextBooking(nextBooking);
+            dtoBuilder.nextBooking(nextBooking);
         }
 
         if (item.getComments() != null) {
-            itemDto.setComments(item.getComments().stream()
-                    .map(CommentMapper::commentToDto)
-                    .collect(Collectors.toList()));
+            dtoBuilder.comments(
+                    item.getComments().stream()
+                            .map(CommentMapper::commentToDto)
+                            .collect(Collectors.toList()));
         }
 
-        return itemDto;
+        return dtoBuilder.build();
     }
 
     public Item dtoToItem(ItemRequestDto itemDto) {
