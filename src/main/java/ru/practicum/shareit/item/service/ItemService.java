@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,7 +13,6 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.pageable.CustomPageable;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -44,7 +44,7 @@ public class ItemService {
     public List<Item> getItemsByUserId(long userId, int from, int size) {
         getUserById(userId);
         return itemRepository
-                .findItemsByOwner_Id(userId, CustomPageable.of(from, size, Sort.by(Sort.Direction.ASC, "id")));
+                .findItemsByOwner_Id(userId, PageRequest.of(from / size, size, Sort.by(Sort.Direction.ASC, "id")));
     }
 
     public Item getItemById(long itemId) {
@@ -97,7 +97,7 @@ public class ItemService {
         }
 
         return itemRepository
-                .searchItems(query, CustomPageable.of(from, size, Sort.by(Sort.Direction.ASC, "id")));
+                .searchItems(query, PageRequest.of(from / size, size, Sort.by(Sort.Direction.ASC, "id")));
     }
 
     @Transactional

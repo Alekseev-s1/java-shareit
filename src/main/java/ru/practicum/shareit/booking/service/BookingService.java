@@ -1,6 +1,7 @@
 package ru.practicum.shareit.booking.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,6 @@ import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.pageable.CustomPageable;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -59,7 +59,7 @@ public class BookingService {
 
     public List<Booking> getBookings(BookingState state, long userId, int from, int size) {
         getUserById(userId);
-        Pageable pagination = CustomPageable.of(from, size, Sort.by(Sort.Direction.DESC, "start"));
+        Pageable pagination = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "start"));
         LocalDateTime now = LocalDateTime.now();
 
         switch (state) {
@@ -92,7 +92,7 @@ public class BookingService {
                 .findItemsByOwner_Id(userId).stream()
                 .map(Item::getId)
                 .collect(Collectors.toList());
-        Pageable pagination = CustomPageable.of(from, size, Sort.by(Sort.Direction.DESC, "start"));
+        Pageable pagination = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "start"));
         LocalDateTime now = LocalDateTime.now();
 
         if (userItemsId.isEmpty()) {

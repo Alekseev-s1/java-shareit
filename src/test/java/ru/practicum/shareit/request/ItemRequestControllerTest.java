@@ -11,6 +11,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.requests.dto.ItemReqRequestDto;
 import ru.practicum.shareit.requests.model.ItemRequest;
 import ru.practicum.shareit.requests.service.ItemRequestService;
@@ -44,6 +45,7 @@ public class ItemRequestControllerTest {
 
     private User requestor;
     private ItemRequest itemRequest;
+    private Item item;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     @BeforeEach
@@ -51,11 +53,17 @@ public class ItemRequestControllerTest {
         requestor = new User();
         requestor.setId(1);
 
+        item = new Item();
+        item.setId(1);
+
         itemRequest = new ItemRequest();
         itemRequest.setId(1);
         itemRequest.setDescription("Test description");
         itemRequest.setRequestor(requestor);
+        itemRequest.setItems(List.of(item));
         itemRequest.setCreated(LocalDateTime.now());
+
+        item.setRequest(itemRequest);
     }
 
     @Test
@@ -70,6 +78,7 @@ public class ItemRequestControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(itemRequest.getId()), Long.class))
                 .andExpect(jsonPath("$.description", is(itemRequest.getDescription())))
+                .andExpect(jsonPath("$.items[0].id", is(itemRequest.getItems().get(0).getId()), Long.class))
                 .andExpect(jsonPath("$.created", is(itemRequest.getCreated().format(formatter))));
     }
 
@@ -85,6 +94,7 @@ public class ItemRequestControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is(itemRequest.getId()), Long.class))
                 .andExpect(jsonPath("$[0].description", is(itemRequest.getDescription())))
+                .andExpect(jsonPath("$[0].items[0].id", is(itemRequest.getItems().get(0).getId()), Long.class))
                 .andExpect(jsonPath("$[0].created", is(itemRequest.getCreated().format(formatter))));
     }
 
@@ -100,6 +110,7 @@ public class ItemRequestControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is(itemRequest.getId()), Long.class))
                 .andExpect(jsonPath("$[0].description", is(itemRequest.getDescription())))
+                .andExpect(jsonPath("$[0].items[0].id", is(itemRequest.getItems().get(0).getId()), Long.class))
                 .andExpect(jsonPath("$[0].created", is(itemRequest.getCreated().format(formatter))));
     }
 
@@ -121,6 +132,7 @@ public class ItemRequestControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(itemRequest.getId()), Long.class))
                 .andExpect(jsonPath("$.description", is(itemRequest.getDescription())))
+                .andExpect(jsonPath("$.items[0].id", is(itemRequest.getItems().get(0).getId()), Long.class))
                 .andExpect(jsonPath("$.created", is(itemRequest.getCreated().format(formatter))));
     }
 }

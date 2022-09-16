@@ -1,5 +1,6 @@
 package ru.practicum.shareit.user;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -102,6 +103,21 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.id", is(firstUser.getId()), Long.class))
                 .andExpect(jsonPath("$.name", is(firstUser.getName())))
                 .andExpect(jsonPath("$.email", is(firstUser.getEmail())));
+    }
+
+    @Test
+    void createUserEmptyNameTest() throws Exception {
+        UserDto firstUserDto = new UserDto();
+        firstUserDto.setName("  ");
+        firstUserDto.setEmail("first@test.com");
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                        .content(objectMapper.writeValueAsString(firstUserDto))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("Параметр name не может быть пустым")));
     }
 
     @Test

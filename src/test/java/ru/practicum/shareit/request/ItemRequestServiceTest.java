@@ -10,7 +10,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.exception.UnitNotFoundException;
-import ru.practicum.shareit.pageable.CustomPageable;
 import ru.practicum.shareit.requests.model.ItemRequest;
 import ru.practicum.shareit.requests.repository.ItemRequestRepository;
 import ru.practicum.shareit.requests.service.ItemRequestService;
@@ -98,7 +97,7 @@ public class ItemRequestServiceTest {
 
         Mockito
                 .verify(itemRequestRepository, Mockito.times(1))
-                .findItemRequestsByRequestor_IdIsNot(anyLong(), any(CustomPageable.class));
+                .findItemRequestsByRequestor_IdIsNot(anyLong(), any(Pageable.class));
         Mockito.verifyNoMoreInteractions(itemRequestRepository, userRepository);
     }
 
@@ -109,7 +108,7 @@ public class ItemRequestServiceTest {
         assertThat(itemRequests, hasSize(0));
         Mockito
                 .verify(itemRequestRepository, Mockito.times(1))
-                .findItemRequestsByRequestor_IdIsNot(anyLong(), any(CustomPageable.class));
+                .findItemRequestsByRequestor_IdIsNot(anyLong(), any(Pageable.class));
         Mockito.verifyNoMoreInteractions(itemRequestRepository, userRepository);
     }
 

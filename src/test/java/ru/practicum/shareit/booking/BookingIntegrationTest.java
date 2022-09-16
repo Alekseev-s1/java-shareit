@@ -42,6 +42,7 @@ public class BookingIntegrationTest {
     private Booking firstBooking;
     private Booking secondBooking;
     private Booking thirdBooking;
+    private Booking fourthBooking;
 
     @BeforeEach
     void setUp() {
@@ -87,6 +88,13 @@ public class BookingIntegrationTest {
         thirdBooking.setStart(LocalDateTime.now().minusDays(4));
         thirdBooking.setEnd(LocalDateTime.now().minusDays(2));
 
+        fourthBooking = new Booking();
+        fourthBooking.setId(4);
+        fourthBooking.setItem(thirdItem);
+        fourthBooking.setBooker(booker);
+        fourthBooking.setStart(LocalDateTime.now().plusDays(2));
+        fourthBooking.setEnd(LocalDateTime.now().plusDays(4));
+
         userRepository.save(itemOwner);
         userRepository.save(booker);
         itemRepository.save(firstItem);
@@ -95,6 +103,7 @@ public class BookingIntegrationTest {
         bookingService.createBooking(booker.getId(), firstBooking);
         bookingService.createBooking(booker.getId(), secondBooking);
         bookingService.createBooking(booker.getId(), thirdBooking);
+        bookingService.createBooking(booker.getId(), fourthBooking);
         bookingService.changeStatus(firstBooking.getId(), itemOwner.getId(), false);
     }
 
@@ -102,10 +111,11 @@ public class BookingIntegrationTest {
     void getAllBookingsTest() {
         List<Booking> bookings = bookingService.getBookings(BookingState.ALL, booker.getId(), 0, 10);
 
-        assertThat(bookings, hasSize(3));
-        assertThat(bookings.get(0), equalTo(secondBooking));
-        assertThat(bookings.get(1), equalTo(firstBooking));
-        assertThat(bookings.get(2), equalTo(thirdBooking));
+        assertThat(bookings, hasSize(4));
+        assertThat(bookings.get(0), equalTo(fourthBooking));
+        assertThat(bookings.get(1), equalTo(secondBooking));
+        assertThat(bookings.get(2), equalTo(firstBooking));
+        assertThat(bookings.get(3), equalTo(thirdBooking));
     }
 
     @Test
@@ -120,9 +130,10 @@ public class BookingIntegrationTest {
     void getWaitingBookingsTest() {
         List<Booking> bookings = bookingService.getBookings(BookingState.WAITING, booker.getId(), 0, 10);
 
-        assertThat(bookings, hasSize(2));
-        assertThat(bookings.get(0), equalTo(secondBooking));
-        assertThat(bookings.get(1), equalTo(thirdBooking));
+        assertThat(bookings, hasSize(3));
+        assertThat(bookings.get(0), equalTo(fourthBooking));
+        assertThat(bookings.get(1), equalTo(secondBooking));
+        assertThat(bookings.get(2), equalTo(thirdBooking));
     }
 
     @Test
@@ -132,5 +143,21 @@ public class BookingIntegrationTest {
         assertThat(bookings, hasSize(2));
         assertThat(bookings.get(0), equalTo(secondBooking));
         assertThat(bookings.get(1), equalTo(firstBooking));
+    }
+
+    @Test
+    void getPastBookingsTest() {
+        List<Booking> bookings = bookingService.getBookings(BookingState.PAST, booker.getId(), 0, 10);
+
+        assertThat(bookings, hasSize(1));
+        assertThat(bookings.get(0), equalTo(thirdBooking));
+    }
+
+    @Test
+    void getFutureBookingsTest() {
+        List<Booking> bookings = bookingService.getBookings(BookingState.FUTURE, booker.getId(), 0, 10);
+
+        assertThat(bookings, hasSize(1));
+        assertThat(bookings.get(0), equalTo(fourthBooking));
     }
 }

@@ -7,6 +7,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingState;
 import ru.practicum.shareit.booking.model.BookingStatus;
@@ -15,7 +16,6 @@ import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.pageable.CustomPageable;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -173,7 +173,7 @@ public class BookingServiceTest {
 
         Mockito
                 .verify(bookingRepository, Mockito.times(1))
-                .findBookingsByBooker_Id(anyLong(), any(CustomPageable.class));
+                .findBookingsByBooker_Id(anyLong(), any(Pageable.class));
         Mockito.verifyNoMoreInteractions(bookingRepository, itemRepository, userRepository);
     }
 
@@ -201,7 +201,7 @@ public class BookingServiceTest {
     }
 
     @Test
-    void getBookingsByItemOwnerTest() {
+    void getAllBookingsByItemOwnerTest() {
         Mockito
                 .when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.of(new User()));
@@ -213,7 +213,92 @@ public class BookingServiceTest {
 
         Mockito
                 .verify(bookingRepository, Mockito.times(1))
-                .findBookingsByItem_IdIn(anyList(), any(CustomPageable.class));
+                .findBookingsByItem_IdIn(anyList(), any(Pageable.class));
+        Mockito.verifyNoMoreInteractions(bookingRepository, itemRepository, userRepository);
+    }
+
+    @Test
+    void getWaitingBookingsByItemOwnerTest() {
+        Mockito
+                .when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(new User()));
+        Mockito
+                .when(itemRepository.findItemsByOwner_Id(anyLong()))
+                .thenReturn(List.of(new Item(), new Item()));
+
+        bookingService.getBookingsByItemOwner(BookingState.WAITING, 1, 0, 10);
+
+        Mockito
+                .verify(bookingRepository, Mockito.times(1))
+                .findBookingsByItem_IdInAndStatus(anyList(), any(BookingStatus.class), any(Pageable.class));
+        Mockito.verifyNoMoreInteractions(bookingRepository, itemRepository, userRepository);
+    }
+
+    @Test
+    void getRejectedBookingsByItemOwnerTest() {
+        Mockito
+                .when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(new User()));
+        Mockito
+                .when(itemRepository.findItemsByOwner_Id(anyLong()))
+                .thenReturn(List.of(new Item(), new Item()));
+
+        bookingService.getBookingsByItemOwner(BookingState.REJECTED, 1, 0, 10);
+
+        Mockito
+                .verify(bookingRepository, Mockito.times(1))
+                .findBookingsByItem_IdInAndStatus(anyList(), any(BookingStatus.class), any(Pageable.class));
+        Mockito.verifyNoMoreInteractions(bookingRepository, itemRepository, userRepository);
+    }
+
+    @Test
+    void getCurrentBookingsByItemOwnerTest() {
+        Mockito
+                .when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(new User()));
+        Mockito
+                .when(itemRepository.findItemsByOwner_Id(anyLong()))
+                .thenReturn(List.of(new Item(), new Item()));
+
+        bookingService.getBookingsByItemOwner(BookingState.CURRENT, 1, 0, 10);
+
+        Mockito
+                .verify(bookingRepository, Mockito.times(1))
+                .findBookingsByItem_IdInAndStartIsBeforeAndEndIsAfter(anyList(), any(LocalDateTime.class), any(LocalDateTime.class), any(Pageable.class));
+        Mockito.verifyNoMoreInteractions(bookingRepository, itemRepository, userRepository);
+    }
+
+    @Test
+    void getPastBookingsByItemOwnerTest() {
+        Mockito
+                .when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(new User()));
+        Mockito
+                .when(itemRepository.findItemsByOwner_Id(anyLong()))
+                .thenReturn(List.of(new Item(), new Item()));
+
+        bookingService.getBookingsByItemOwner(BookingState.PAST, 1, 0, 10);
+
+        Mockito
+                .verify(bookingRepository, Mockito.times(1))
+                .findBookingsByItem_IdInAndEndIsBefore(anyList(), any(LocalDateTime.class), any(Pageable.class));
+        Mockito.verifyNoMoreInteractions(bookingRepository, itemRepository, userRepository);
+    }
+
+    @Test
+    void getFutureBookingsByItemOwnerTest() {
+        Mockito
+                .when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(new User()));
+        Mockito
+                .when(itemRepository.findItemsByOwner_Id(anyLong()))
+                .thenReturn(List.of(new Item(), new Item()));
+
+        bookingService.getBookingsByItemOwner(BookingState.FUTURE, 1, 0, 10);
+
+        Mockito
+                .verify(bookingRepository, Mockito.times(1))
+                .findBookingsByItem_IdInAndStartIsAfter(anyList(), any(LocalDateTime.class), any(Pageable.class));
         Mockito.verifyNoMoreInteractions(bookingRepository, itemRepository, userRepository);
     }
 

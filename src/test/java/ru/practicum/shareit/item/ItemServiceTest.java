@@ -7,6 +7,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
@@ -18,7 +19,6 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.item.service.ItemService;
-import ru.practicum.shareit.pageable.CustomPageable;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -68,7 +68,7 @@ public class ItemServiceTest {
         Mockito.verify(userRepository, Mockito.times(1)).findById(1L);
         Mockito
                 .verify(itemRepository, Mockito.times(1))
-                .findItemsByOwner_Id(anyLong(), any(CustomPageable.class));
+                .findItemsByOwner_Id(anyLong(), any(Pageable.class));
         Mockito.verifyNoMoreInteractions(itemRepository, userRepository, bookingRepository, commentRepository);
     }
 
@@ -201,7 +201,7 @@ public class ItemServiceTest {
 
         Mockito
                 .verify(itemRepository, Mockito.times(1))
-                .searchItems(anyString(), any(CustomPageable.class));
+                .searchItems(anyString(), any(Pageable.class));
         Mockito.verifyNoMoreInteractions(itemRepository, userRepository, bookingRepository, commentRepository);
     }
 

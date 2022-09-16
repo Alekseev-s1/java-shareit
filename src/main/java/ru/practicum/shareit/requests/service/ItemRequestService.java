@@ -1,10 +1,10 @@
 package ru.practicum.shareit.requests.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.pageable.CustomPageable;
 import ru.practicum.shareit.requests.model.ItemRequest;
 import ru.practicum.shareit.requests.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
@@ -40,7 +40,7 @@ public class ItemRequestService {
 
     public List<ItemRequest> getItemRequests(long userId, int from, int size) {
         return itemRequestRepository.findItemRequestsByRequestor_IdIsNot(userId,
-                CustomPageable.of(from, size, Sort.by(Sort.Direction.DESC, "created")));
+                PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "created")));
     }
 
     @Transactional

@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import ru.practicum.shareit.exception.ItemUnavailableException;
+import ru.practicum.shareit.exception.UnitNotFoundException;
 import ru.practicum.shareit.item.dto.CommentRequestDto;
 import ru.practicum.shareit.item.dto.ItemRequestDto;
 import ru.practicum.shareit.item.model.Comment;
@@ -27,6 +30,7 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ru.practicum.shareit.exception.UnitNotFoundException.unitNotFoundException;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -89,6 +93,20 @@ public class ItemControllerTest {
                 .andExpect(jsonPath("$.description", is(item.getDescription())))
                 .andExpect(jsonPath("$.available", is(item.isAvailable())))
                 .andExpect(jsonPath("$.owner.id", is(item.getOwner().getId()), Long.class));
+    }
+
+    @Test
+    void getItemNotFoundTest() throws Exception {
+        Mockito
+                .when(itemService.getItemById(anyLong()))
+                .thenThrow(new UnitNotFoundException("Вещь с id = 1 не найдена"));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/items/1")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("X-Sharer-User-Id", 1))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error", is("Вещь с id = 1 не найдена")));
+
     }
 
     @Test
@@ -189,9 +207,29 @@ public class ItemControllerTest {
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(comment.getId()), Long.class))
                 .andExpect(jsonPath("$.text", is(comment.getText())))
                 .andExpect(jsonPath("$.authorName", is(comment.getAuthor().getName())))
                 .andExpect(jsonPath("$.created", is(comment.getCreatedAt().format(formatter))));
+    }
+
+    @Test
+    void addCommentByWrongOwnerTest() throws Exception {
+        CommentRequestDto commentRequestDto = new CommentRequestDto();
+        commentRequestDto.setText("Test text");
+
+        Mockito
+                .when(itemService.addComment(anyLong(), anyLong(), any(Comment.class)))
+                .thenThrow(new ItemUnavailableException("Пользователь с id = 1 не может оставить комментарий к вещи с id = 1, так как еще не бронировал ее"));
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/items/1/comment")
+                        .header("X-Sharer-User-Id", 1)
+                        .content(objectMapper.writeValueAsString(commentRequestDto))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("Пользователь с id = 1 не может оставить комментарий к вещи с id = 1, так как еще не бронировал ее")));
     }
 }
