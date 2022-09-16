@@ -8,6 +8,7 @@ import ru.practicum.shareit.item.model.Item;
 
 import javax.persistence.*;
 import java.util.List;
+import java.util.Objects;
 
 @Setter
 @Getter
@@ -39,5 +40,10 @@ public class User {
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
         return id == user.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
