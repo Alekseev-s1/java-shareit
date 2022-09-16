@@ -90,7 +90,9 @@ public class BookingControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders.get("/bookings")
                         .accept(MediaType.APPLICATION_JSON)
-                        .header("X-Sharer-User-Id", 1))
+                        .header("X-Sharer-User-Id", 1)
+                        .param("from", "0")
+                        .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is(booking.getId()), Long.class))
                 .andExpect(jsonPath("$[0].booker.id", is(booking.getBooker().getId()), Long.class))
@@ -108,7 +110,9 @@ public class BookingControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders.get("/bookings/owner")
                         .accept(MediaType.APPLICATION_JSON)
-                        .header("X-Sharer-User-Id", 1))
+                        .header("X-Sharer-User-Id", 1)
+                        .param("from", "0")
+                        .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", is(booking.getId()), Long.class))
                 .andExpect(jsonPath("$[0].booker.id", is(booking.getBooker().getId()), Long.class))
@@ -209,5 +213,26 @@ public class BookingControllerTest {
                         .header("X-Sharer-User-Id", 1))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error", is("Пользователь с id = 1 должен быть либо владельцем вещи с id = 1, либо автором бронирования с id = 1")));
+    }
+
+    @Test
+    void getBookingsZeroSizeTest() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/bookings")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("X-Sharer-User-Id", 1)
+                        .param("from", "0")
+                        .param("size", "0"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("must be greater than 0")));
+    }
+
+    @Test
+    void getBookingsWrongStateTest() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/bookings")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("X-Sharer-User-Id", 1)
+                        .param("state", "OLOLO"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error", is("Unknown state: OLOLO")));
     }
 }
