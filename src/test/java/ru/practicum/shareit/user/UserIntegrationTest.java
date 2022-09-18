@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
-import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.service.UserService;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -20,18 +20,18 @@ public class UserIntegrationTest {
 
     @Test
     void updateUserTest() {
-        User user = new User();
-        user.setName("Test name");
-        user.setEmail("Test email");
+        UserDto userDto = new UserDto();
+        userDto.setName("Test name");
+        userDto.setEmail("Test email");
 
-        User userToUpdate = new User();
-        userToUpdate.setName("Updated name");
-        userToUpdate.setEmail("Updated email");
+        UserDto userToUpdateDto = new UserDto();
+        userToUpdateDto.setName("Updated name");
+        userToUpdateDto.setEmail("Updated email");
 
-        userService.createUser(user);
-        User updatedUser = userService.updateUser(1, userToUpdate);
+        userService.createUser(userDto);
+        UserDto updatedUserDto = userService.updateUser(1, userToUpdateDto);
 
-        assertThat(updatedUser.getName(), equalTo(userToUpdate.getName()));
-        assertThat(updatedUser.getEmail(), equalTo(userToUpdate.getEmail()));
+        assertThat(updatedUserDto.getName(), equalTo(userToUpdateDto.getName()));
+        assertThat(updatedUserDto.getEmail(), equalTo(userToUpdateDto.getEmail()));
     }
 }

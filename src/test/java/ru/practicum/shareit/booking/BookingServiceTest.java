@@ -8,6 +8,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
+import ru.practicum.shareit.booking.dto.BookingRequestDto;
+import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingState;
 import ru.practicum.shareit.booking.model.BookingStatus;
@@ -62,6 +64,8 @@ public class BookingServiceTest {
         Booking booking = new Booking();
         booking.setId(1);
         booking.setBooker(booker);
+        booking.setStart(LocalDateTime.now().minusDays(2));
+        booking.setEnd(LocalDateTime.now().plusDays(2));
         booking.setItem(item);
 
         Mockito
@@ -93,6 +97,8 @@ public class BookingServiceTest {
         booking.setId(1);
         booking.setBooker(booker);
         booking.setItem(item);
+        booking.setStart(LocalDateTime.now().minusDays(2));
+        booking.setEnd(LocalDateTime.now().plusDays(2));
 
         Mockito
                 .when(bookingRepository.findById(anyLong()))
@@ -324,7 +330,7 @@ public class BookingServiceTest {
                 .when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.of(new User()));
 
-        List<Booking> items = bookingService.getBookingsByItemOwner(BookingState.ALL, 1, 0, 10);
+        List<BookingResponseDto> items = bookingService.getBookingsByItemOwner(BookingState.ALL, 1, 0, 10);
 
         assertThat(items, hasSize(0));
         Mockito.verify(itemRepository, Mockito.times(1)).findItemsByOwner_Id(1);
@@ -357,10 +363,17 @@ public class BookingServiceTest {
         item.setOwner(itemOwner);
 
         Booking booking = new Booking();
+        booking.setId(1);
+        booking.setBooker(booker);
+        booking.setItem(item);
+        booking.setStatus(BookingStatus.APPROVED);
         booking.setStart(LocalDateTime.now().minusDays(2));
         booking.setEnd(LocalDateTime.now().plusDays(2));
 
-        booking.setItem(item);
+        BookingRequestDto bookingRequestDto = new BookingRequestDto();
+        bookingRequestDto.setItemId(item.getId());
+        bookingRequestDto.setStart(LocalDateTime.now().minusDays(2));
+        bookingRequestDto.setEnd(LocalDateTime.now().plusDays(2));
 
         Mockito
                 .when(userRepository.findById(anyLong()))
@@ -368,8 +381,11 @@ public class BookingServiceTest {
         Mockito
                 .when(itemRepository.findById(anyLong()))
                 .thenReturn(Optional.of(item));
+        Mockito
+                .when(bookingRepository.save(any(Booking.class)))
+                .thenReturn(booking);
 
-        bookingService.createBooking(1, booking);
+        bookingService.createBooking(1, bookingRequestDto);
 
         Mockito.verify(bookingRepository, Mockito.times(1)).save(itemArgumentCaptor.capture());
 
@@ -377,16 +393,19 @@ public class BookingServiceTest {
 
         assertThat(capturedBooking.getItem(), equalTo(item));
         assertThat(capturedBooking.getBooker(), equalTo(booker));
-        assertThat(capturedBooking.getStart(), equalTo(booking.getStart()));
-        assertThat(capturedBooking.getEnd(), equalTo(booking.getEnd()));
+        assertThat(capturedBooking.getStart(), equalTo(bookingRequestDto.getStart()));
+        assertThat(capturedBooking.getEnd(), equalTo(bookingRequestDto.getEnd()));
         assertThat(capturedBooking.getStatus(), equalTo(BookingStatus.WAITING));
         Mockito.verifyNoMoreInteractions(bookingRepository, itemRepository, userRepository);
     }
 
     @Test
     void createBookingUserNotFoundTest() {
+        BookingRequestDto bookingRequestDto = new BookingRequestDto();
+        bookingRequestDto.setItemId(1L);
+
         Exception exception = assertThrows(UnitNotFoundException.class,
-                () -> bookingService.createBooking(1, new Booking()));
+                () -> bookingService.createBooking(1, bookingRequestDto));
         assertThat(exception.getMessage(), equalTo("Пользователь с id = 1 не найден"));
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(1L);
@@ -398,15 +417,15 @@ public class BookingServiceTest {
         Item item = new Item();
         item.setId(1);
 
-        Booking booking = new Booking();
-        booking.setItem(item);
+        BookingRequestDto bookingRequestDto = new BookingRequestDto();
+        bookingRequestDto.setItemId(item.getId());
 
         Mockito
                 .when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.of(new User()));
 
         Exception exception = assertThrows(UnitNotFoundException.class,
-                () -> bookingService.createBooking(1, booking));
+                () -> bookingService.createBooking(1, bookingRequestDto));
         assertThat(exception.getMessage(), equalTo("Вещь с id = 1 не найдена"));
 
         Mockito.verify(itemRepository, Mockito.times(1)).findById(1L);
@@ -425,8 +444,8 @@ public class BookingServiceTest {
         item.setId(1);
         item.setOwner(itemOwner);
 
-        Booking booking = new Booking();
-        booking.setItem(item);
+        BookingRequestDto bookingRequestDto = new BookingRequestDto();
+        bookingRequestDto.setItemId(item.getId());
 
         Mockito
                 .when(userRepository.findById(anyLong()))
@@ -436,7 +455,7 @@ public class BookingServiceTest {
                 .thenReturn(Optional.of(item));
 
         Exception exception = assertThrows(ItemUnavailableException.class,
-                () -> bookingService.createBooking(1, booking));
+                () -> bookingService.createBooking(1, bookingRequestDto));
         assertThat(exception.getMessage(), equalTo("Данная вещь недоступна для бронирования"));
 
         Mockito.verifyNoMoreInteractions(bookingRepository, itemRepository, userRepository);
@@ -452,8 +471,8 @@ public class BookingServiceTest {
         item.setOwner(booker);
         item.setAvailable(true);
 
-        Booking booking = new Booking();
-        booking.setItem(item);
+        BookingRequestDto bookingRequestDto = new BookingRequestDto();
+        bookingRequestDto.setItemId(item.getId());
 
         Mockito
                 .when(userRepository.findById(anyLong()))
@@ -463,7 +482,7 @@ public class BookingServiceTest {
                 .thenReturn(Optional.of(item));
 
         Exception exception = assertThrows(WrongOwnerException.class,
-                () -> bookingService.createBooking(1, booking));
+                () -> bookingService.createBooking(1, bookingRequestDto));
         assertThat(exception.getMessage(), equalTo("Владелец вещи не может ее забронировать"));
 
         Mockito.verifyNoMoreInteractions(bookingRepository, itemRepository, userRepository);
@@ -482,10 +501,10 @@ public class BookingServiceTest {
         item.setOwner(itemOwner);
         item.setAvailable(true);
 
-        Booking booking = new Booking();
-        booking.setItem(item);
-        booking.setStart(LocalDateTime.now().plusDays(2));
-        booking.setEnd(LocalDateTime.now().minusDays(2));
+        BookingRequestDto bookingRequestDto = new BookingRequestDto();
+        bookingRequestDto.setItemId(item.getId());
+        bookingRequestDto.setStart(LocalDateTime.now().plusDays(2));
+        bookingRequestDto.setEnd(LocalDateTime.now().minusDays(2));
 
         Mockito
                 .when(userRepository.findById(anyLong()))
@@ -495,7 +514,7 @@ public class BookingServiceTest {
                 .thenReturn(Optional.of(item));
 
         Exception exception = assertThrows(CrossDateException.class,
-                () -> bookingService.createBooking(1, booking));
+                () -> bookingService.createBooking(1, bookingRequestDto));
         assertThat(exception.getMessage(), equalTo("Дата окончания бронирования меньше даты начала бронирования"));
 
         Mockito.verifyNoMoreInteractions(bookingRepository, itemRepository, userRepository);
@@ -513,6 +532,9 @@ public class BookingServiceTest {
         Booking booking = new Booking();
         booking.setId(1);
         booking.setItem(item);
+        booking.setBooker(user);
+        booking.setStart(LocalDateTime.now().minusDays(2));
+        booking.setEnd(LocalDateTime.now().plusDays(2));
         booking.setStatus(BookingStatus.WAITING);
 
         Mockito
@@ -522,10 +544,10 @@ public class BookingServiceTest {
                 .when(bookingRepository.findById(anyLong()))
                 .thenReturn(Optional.of(booking));
 
-        Booking changedBooking = bookingService.changeStatus(1, 1, true);
+        BookingResponseDto bookingResponseDto = bookingService.changeStatus(1, 1, true);
 
-        assertThat(changedBooking.getId(), equalTo(booking.getId()));
-        assertThat(changedBooking.getStatus(), equalTo(BookingStatus.APPROVED));
+        assertThat(bookingResponseDto.getId(), equalTo(booking.getId()));
+        assertThat(bookingResponseDto.getStatus(), equalTo(BookingStatus.APPROVED));
         Mockito.verifyNoMoreInteractions(bookingRepository, itemRepository, userRepository);
     }
 
@@ -541,6 +563,9 @@ public class BookingServiceTest {
         Booking booking = new Booking();
         booking.setId(1);
         booking.setItem(item);
+        booking.setBooker(user);
+        booking.setStart(LocalDateTime.now().minusDays(2));
+        booking.setEnd(LocalDateTime.now().plusDays(2));
         booking.setStatus(BookingStatus.WAITING);
 
         Mockito
@@ -550,10 +575,10 @@ public class BookingServiceTest {
                 .when(bookingRepository.findById(anyLong()))
                 .thenReturn(Optional.of(booking));
 
-        Booking changedBooking = bookingService.changeStatus(1, 1, false);
+        BookingResponseDto bookingResponseDto = bookingService.changeStatus(1, 1, false);
 
-        assertThat(changedBooking.getId(), equalTo(booking.getId()));
-        assertThat(changedBooking.getStatus(), equalTo(BookingStatus.REJECTED));
+        assertThat(bookingResponseDto.getId(), equalTo(booking.getId()));
+        assertThat(bookingResponseDto.getStatus(), equalTo(BookingStatus.REJECTED));
         Mockito.verifyNoMoreInteractions(bookingRepository, itemRepository, userRepository);
     }
 

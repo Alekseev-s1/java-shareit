@@ -10,6 +10,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.exception.UnitNotFoundException;
+import ru.practicum.shareit.requests.dto.ItemReqRequestDto;
+import ru.practicum.shareit.requests.dto.ItemReqResponseDto;
 import ru.practicum.shareit.requests.model.ItemRequest;
 import ru.practicum.shareit.requests.repository.ItemRequestRepository;
 import ru.practicum.shareit.requests.service.ItemRequestService;
@@ -46,16 +48,23 @@ public class ItemRequestServiceTest {
         Mockito
                 .when(itemRequestRepository.findById(anyLong()))
                 .thenReturn(Optional.of(new ItemRequest()));
+        Mockito
+                .when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(new User()));
 
-        itemRequestService.getItemRequestById(1);
+        itemRequestService.getItemRequestById(1, 1);
 
         Mockito.verifyNoMoreInteractions(itemRequestRepository, userRepository);
     }
 
     @Test
     void getItemRequestByIdNotFoundTest() {
+        Mockito
+                .when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(new User()));
+
         Exception exception = assertThrows(UnitNotFoundException.class,
-                () -> itemRequestService.getItemRequestById(1));
+                () -> itemRequestService.getItemRequestById(1, 1));
         assertThat(exception.getMessage(), equalTo("Запрос с id = 1 не найден"));
 
         Mockito.verify(itemRequestRepository, Mockito.times(1)).findById(1L);
@@ -64,6 +73,9 @@ public class ItemRequestServiceTest {
 
     @Test
     void getItemRequestsByUserIdTest() {
+        Mockito
+                .when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(new User()));
         Mockito
                 .when(itemRequestRepository.findItemRequestsByRequestor_Id(anyLong(), any(Sort.class)))
                 .thenReturn(List.of(new ItemRequest(), new ItemRequest()));
@@ -77,18 +89,20 @@ public class ItemRequestServiceTest {
     }
 
     @Test
-    void getItemRequestsByUserIdNotFoundTest() {
-        List<ItemRequest> itemRequests = itemRequestService.getItemRequestsByUser(1);
+    void getItemRequestsByUserNotFoundTest() {
+        Exception exception = assertThrows(UnitNotFoundException.class,
+                () -> itemRequestService.getItemRequests(1, 1, 1));
+        assertThat(exception.getMessage(), equalTo("Пользователь с id = 1 не найден"));
 
-        assertThat(itemRequests, hasSize(0));
-        Mockito
-                .verify(itemRequestRepository, Mockito.times(1))
-                .findItemRequestsByRequestor_Id(anyLong(), any(Sort.class));
+        Mockito.verify(userRepository, Mockito.times(1)).findById(1L);
         Mockito.verifyNoMoreInteractions(itemRequestRepository, userRepository);
     }
 
     @Test
     void getItemRequestsTest() {
+        Mockito
+                .when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(new User()));
         Mockito
                 .when(itemRequestRepository.findItemRequestsByRequestor_IdIsNot(anyLong(), any(Pageable.class)))
                 .thenReturn(List.of(new ItemRequest(), new ItemRequest()));
@@ -103,12 +117,14 @@ public class ItemRequestServiceTest {
 
     @Test
     void getItemRequestsNotFoundTest() {
-        List<ItemRequest> itemRequests = itemRequestService.getItemRequests(1, 0, 10);
-
-        assertThat(itemRequests, hasSize(0));
         Mockito
-                .verify(itemRequestRepository, Mockito.times(1))
-                .findItemRequestsByRequestor_IdIsNot(anyLong(), any(Pageable.class));
+                .when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(new User()));
+
+        List<ItemReqResponseDto> itemRequestsDto = itemRequestService.getItemRequests(1, 1, 1);
+
+        assertThat(itemRequestsDto, hasSize(0));
+        Mockito.verify(itemRequestRepository, Mockito.times(1)).findItemRequestsByRequestor_IdIsNot(anyLong(), any(Pageable.class));
         Mockito.verifyNoMoreInteractions(itemRequestRepository, userRepository);
     }
 
@@ -118,15 +134,23 @@ public class ItemRequestServiceTest {
         requestor.setId(1);
 
         ItemRequest itemRequest = new ItemRequest();
+        itemRequest.setId(1);
         itemRequest.setDescription("Test description");
+        itemRequest.setRequestor(requestor);
+
+        ItemReqRequestDto itemRequestDto = new ItemReqRequestDto();
+        itemRequestDto.setDescription("Test description");
 
         ArgumentCaptor<ItemRequest> itemRequestArgumentCaptor = ArgumentCaptor.forClass(ItemRequest.class);
 
         Mockito
                 .when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.of(requestor));
+        Mockito
+                .when(itemRequestRepository.save(any(ItemRequest.class)))
+                .thenReturn(itemRequest);
 
-        itemRequestService.createItemRequest(1, itemRequest);
+        itemRequestService.createItemRequest(1, itemRequestDto);
 
         Mockito
                 .verify(itemRequestRepository, Mockito.times(1))

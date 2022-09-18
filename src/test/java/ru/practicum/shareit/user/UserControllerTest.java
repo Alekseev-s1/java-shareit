@@ -12,7 +12,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.nio.charset.StandardCharsets;
@@ -37,61 +36,57 @@ public class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    private User firstUser;
+    private UserDto firstUserDto;
 
     @BeforeEach
     void setUp() {
-        firstUser = new User();
-        firstUser.setId(1);
-        firstUser.setName("First name");
-        firstUser.setEmail("first@test.com");
+        firstUserDto = new UserDto();
+        firstUserDto.setId(1);
+        firstUserDto.setName("First name");
+        firstUserDto.setEmail("first@test.com");
     }
 
     @Test
     void getUsersTest() throws Exception {
-        User secondUser = new User();
-        secondUser.setId(2);
-        secondUser.setName("Second name");
-        secondUser.setEmail("second@test.com");
+        UserDto secondUserDto = new UserDto();
+        secondUserDto.setId(2);
+        secondUserDto.setName("Second name");
+        secondUserDto.setEmail("second@test.com");
 
         Mockito
                 .when(userService.getUsers())
-                .thenReturn(List.of(firstUser, secondUser));
+                .thenReturn(List.of(firstUserDto, secondUserDto));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/users")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is(firstUser.getId()), Long.class))
-                .andExpect(jsonPath("$[0].name", is(firstUser.getName())))
-                .andExpect(jsonPath("$[0].email", is(firstUser.getEmail())))
-                .andExpect(jsonPath("$[1].id", is(secondUser.getId()), Long.class))
-                .andExpect(jsonPath("$[1].name", is(secondUser.getName())))
-                .andExpect(jsonPath("$[1].email", is(secondUser.getEmail())));
+                .andExpect(jsonPath("$[0].id", is(firstUserDto.getId()), Long.class))
+                .andExpect(jsonPath("$[0].name", is(firstUserDto.getName())))
+                .andExpect(jsonPath("$[0].email", is(firstUserDto.getEmail())))
+                .andExpect(jsonPath("$[1].id", is(secondUserDto.getId()), Long.class))
+                .andExpect(jsonPath("$[1].name", is(secondUserDto.getName())))
+                .andExpect(jsonPath("$[1].email", is(secondUserDto.getEmail())));
     }
 
     @Test
     void getUserByIdTest() throws Exception {
         Mockito
-                .when(userService.getUserById(anyLong()))
-                .thenReturn(firstUser);
+                .when(userService.getUser(anyLong()))
+                .thenReturn(firstUserDto);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/users/1")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(firstUser.getId()), Long.class))
-                .andExpect(jsonPath("$.name", is(firstUser.getName())))
-                .andExpect(jsonPath("$.email", is(firstUser.getEmail())));
+                .andExpect(jsonPath("$.id", is(firstUserDto.getId()), Long.class))
+                .andExpect(jsonPath("$.name", is(firstUserDto.getName())))
+                .andExpect(jsonPath("$.email", is(firstUserDto.getEmail())));
     }
 
     @Test
     void createUserTest() throws Exception {
-        UserDto firstUserDto = new UserDto();
-        firstUserDto.setName("First name");
-        firstUserDto.setEmail("first@test.com");
-
         Mockito
-                .when(userService.createUser(any(User.class)))
-                .thenReturn(firstUser);
+                .when(userService.createUser(any(UserDto.class)))
+                .thenReturn(this.firstUserDto);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/users")
                         .content(objectMapper.writeValueAsString(firstUserDto))
@@ -99,16 +94,14 @@ public class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", is(firstUser.getId()), Long.class))
-                .andExpect(jsonPath("$.name", is(firstUser.getName())))
-                .andExpect(jsonPath("$.email", is(firstUser.getEmail())));
+                .andExpect(jsonPath("$.id", is(this.firstUserDto.getId()), Long.class))
+                .andExpect(jsonPath("$.name", is(this.firstUserDto.getName())))
+                .andExpect(jsonPath("$.email", is(this.firstUserDto.getEmail())));
     }
 
     @Test
     void createUserEmptyNameTest() throws Exception {
-        UserDto firstUserDto = new UserDto();
         firstUserDto.setName("  ");
-        firstUserDto.setEmail("first@test.com");
 
         mockMvc.perform(MockMvcRequestBuilders.post("/users")
                         .content(objectMapper.writeValueAsString(firstUserDto))
@@ -121,13 +114,9 @@ public class UserControllerTest {
 
     @Test
     void updateUserTest() throws Exception {
-        UserDto firstUserDto = new UserDto();
-        firstUserDto.setName("First name");
-        firstUserDto.setEmail("first@test.com");
-
         Mockito
-                .when(userService.updateUser(anyLong(), any(User.class)))
-                .thenReturn(firstUser);
+                .when(userService.updateUser(anyLong(), any(UserDto.class)))
+                .thenReturn(this.firstUserDto);
 
         mockMvc.perform(MockMvcRequestBuilders.patch("/users/1")
                         .content(objectMapper.writeValueAsString(firstUserDto))
@@ -135,9 +124,9 @@ public class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(firstUser.getId()), Long.class))
-                .andExpect(jsonPath("$.name", is(firstUser.getName())))
-                .andExpect(jsonPath("$.email", is(firstUser.getEmail())));
+                .andExpect(jsonPath("$.id", is(this.firstUserDto.getId()), Long.class))
+                .andExpect(jsonPath("$.name", is(this.firstUserDto.getName())))
+                .andExpect(jsonPath("$.email", is(this.firstUserDto.getEmail())));
     }
 
     @Test

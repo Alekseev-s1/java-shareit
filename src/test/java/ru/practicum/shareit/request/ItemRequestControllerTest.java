@@ -11,9 +11,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.requests.dto.ItemReqRequestDto;
-import ru.practicum.shareit.requests.model.ItemRequest;
+import ru.practicum.shareit.requests.dto.ItemReqResponseDto;
 import ru.practicum.shareit.requests.service.ItemRequestService;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
@@ -37,81 +36,76 @@ public class ItemRequestControllerTest {
     @MockBean
     private ItemRequestService itemRequestService;
 
-    @MockBean
-    private UserService userService;
-
     @Autowired
     private MockMvc mockMvc;
 
-    private User requestor;
-    private ItemRequest itemRequest;
-    private Item item;
+    private ItemReqResponseDto itemRequestDto;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     @BeforeEach
     void setUp() {
-        requestor = new User();
+        User requestor = new User();
         requestor.setId(1);
 
-        item = new Item();
-        item.setId(1);
+        ItemReqResponseDto.Item item = new ItemReqResponseDto.Item(1,
+                "Item name",
+                "Item description",
+                true,
+                1);
 
-        itemRequest = new ItemRequest();
-        itemRequest.setId(1);
-        itemRequest.setDescription("Test description");
-        itemRequest.setRequestor(requestor);
-        itemRequest.setItems(List.of(item));
-        itemRequest.setCreated(LocalDateTime.now());
-
-        item.setRequest(itemRequest);
+        itemRequestDto = new ItemReqResponseDto();
+        itemRequestDto.setId(1);
+        itemRequestDto.setDescription("Test description");
+        itemRequestDto.setItems(List.of(item));
+        itemRequestDto.setCreated(LocalDateTime.parse(LocalDateTime.now().format(formatter)));
     }
 
     @Test
     void getItemRequestByIdTest() throws Exception {
         Mockito
-                .when(itemRequestService.getItemRequestById(anyLong()))
-                .thenReturn(itemRequest);
+                .when(itemRequestService.getItemRequestById(anyLong(), anyLong()))
+                .thenReturn(itemRequestDto);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/requests/1")
                         .accept(MediaType.APPLICATION_JSON)
                         .header("X-Sharer-User-Id", 1))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(itemRequest.getId()), Long.class))
-                .andExpect(jsonPath("$.description", is(itemRequest.getDescription())))
-                .andExpect(jsonPath("$.items[0].id", is(itemRequest.getItems().get(0).getId()), Long.class))
-                .andExpect(jsonPath("$.created", is(itemRequest.getCreated().format(formatter))));
+                .andExpect(jsonPath("$.id", is(itemRequestDto.getId()), Long.class))
+                .andExpect(jsonPath("$.description", is(itemRequestDto.getDescription())))
+                .andExpect(jsonPath("$.items[0].id", is(itemRequestDto.getItems().get(0).getId()), Long.class))
+                .andExpect(jsonPath("$.created", is(itemRequestDto.getCreated().format(formatter))));
     }
 
     @Test
     void getItemRequestByUserTest() throws Exception {
         Mockito
                 .when(itemRequestService.getItemRequestsByUser(anyLong()))
-                .thenReturn(List.of(itemRequest));
+                .thenReturn(List.of(itemRequestDto));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/requests")
                         .accept(MediaType.APPLICATION_JSON)
                         .header("X-Sharer-User-Id", 1))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is(itemRequest.getId()), Long.class))
-                .andExpect(jsonPath("$[0].description", is(itemRequest.getDescription())))
-                .andExpect(jsonPath("$[0].items[0].id", is(itemRequest.getItems().get(0).getId()), Long.class))
-                .andExpect(jsonPath("$[0].created", is(itemRequest.getCreated().format(formatter))));
+                .andExpect(jsonPath("$[0].id", is(itemRequestDto.getId()), Long.class))
+                .andExpect(jsonPath("$[0].description", is(itemRequestDto.getDescription())))
+                .andExpect(jsonPath("$[0].items[0].id", is(itemRequestDto.getItems().get(0).getId()), Long.class))
+                .andExpect(jsonPath("$[0].created", is(itemRequestDto.getCreated().format(formatter))));
     }
 
     @Test
     void getItemRequestsTest() throws Exception {
         Mockito
                 .when(itemRequestService.getItemRequests(anyLong(), anyInt(), anyInt()))
-                .thenReturn(List.of(itemRequest));
+                .thenReturn(List.of(itemRequestDto));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/requests/all")
                         .accept(MediaType.APPLICATION_JSON)
                         .header("X-Sharer-User-Id", 1))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is(itemRequest.getId()), Long.class))
-                .andExpect(jsonPath("$[0].description", is(itemRequest.getDescription())))
-                .andExpect(jsonPath("$[0].items[0].id", is(itemRequest.getItems().get(0).getId()), Long.class))
-                .andExpect(jsonPath("$[0].created", is(itemRequest.getCreated().format(formatter))));
+                .andExpect(jsonPath("$[0].id", is(itemRequestDto.getId()), Long.class))
+                .andExpect(jsonPath("$[0].description", is(itemRequestDto.getDescription())))
+                .andExpect(jsonPath("$[0].items[0].id", is(itemRequestDto.getItems().get(0).getId()), Long.class))
+                .andExpect(jsonPath("$[0].created", is(itemRequestDto.getCreated().format(formatter))));
     }
 
     @Test
@@ -120,8 +114,8 @@ public class ItemRequestControllerTest {
         reqRequestDto.setDescription("Test description");
 
         Mockito
-                .when(itemRequestService.createItemRequest(anyLong(), any(ItemRequest.class)))
-                .thenReturn(itemRequest);
+                .when(itemRequestService.createItemRequest(anyLong(), any(ItemReqRequestDto.class)))
+                .thenReturn(itemRequestDto);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/requests")
                         .header("X-Sharer-User-Id", 1)
@@ -130,9 +124,9 @@ public class ItemRequestControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(itemRequest.getId()), Long.class))
-                .andExpect(jsonPath("$.description", is(itemRequest.getDescription())))
-                .andExpect(jsonPath("$.items[0].id", is(itemRequest.getItems().get(0).getId()), Long.class))
-                .andExpect(jsonPath("$.created", is(itemRequest.getCreated().format(formatter))));
+                .andExpect(jsonPath("$.id", is(itemRequestDto.getId()), Long.class))
+                .andExpect(jsonPath("$.description", is(itemRequestDto.getDescription())))
+                .andExpect(jsonPath("$.items[0].id", is(itemRequestDto.getItems().get(0).getId()), Long.class))
+                .andExpect(jsonPath("$.created", is(itemRequestDto.getCreated().format(formatter))));
     }
 }

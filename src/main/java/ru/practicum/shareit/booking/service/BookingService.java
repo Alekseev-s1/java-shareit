@@ -6,6 +6,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.dto.BookingRequestDto;
+import ru.practicum.shareit.booking.dto.BookingResponseDto;
+import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingState;
 import ru.practicum.shareit.booking.model.BookingStatus;
@@ -39,11 +42,10 @@ public class BookingService {
         this.itemRepository = itemRepository;
     }
 
-    public Booking getBookingById(long bookingId, long userId) {
+    public BookingResponseDto getBookingById(long bookingId, long userId) {
         getUserById(userId);
-        Booking booking = bookingRepository
-                .findById(bookingId)
-                .orElseThrow(unitNotFoundException("Запись бронирования с id = {0} не найдена", bookingId));
+
+        Booking booking = getBookingById(bookingId);
         Item item = booking.getItem();
 
         if (!(checkItemOwner(userId, item) || checkBookingOwner(userId, booking))) {
@@ -54,46 +56,60 @@ public class BookingService {
                             booking.getId()));
         }
 
-        return booking;
+        return BookingMapper.bookingToDto(booking);
     }
 
-    public List<Booking> getBookings(BookingState state, long userId, int from, int size) {
+    public List<BookingResponseDto> getBookings(BookingState state, long userId, int from, int size) {
         getUserById(userId);
+
         Pageable pagination = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "start"));
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        List<Booking> bookings;
 
         switch (state) {
             case ALL:
-                return bookingRepository
+                bookings = bookingRepository
                         .findBookingsByBooker_Id(userId, pagination);
+                break;
             case WAITING:
-                return bookingRepository
+                bookings = bookingRepository
                         .findBookingsByBooker_IdAndStatus(userId, BookingStatus.WAITING, pagination);
+                break;
             case REJECTED:
-                return bookingRepository
+                bookings = bookingRepository
                         .findBookingsByBooker_IdAndStatus(userId, BookingStatus.REJECTED, pagination);
+                break;
             case CURRENT:
-                return bookingRepository
-                        .findBookingsByBooker_idAndStartIsBeforeAndEndIsAfter(userId, now, now, pagination);
+                bookings = bookingRepository
+                        .findBookingsByBooker_idAndStartIsBeforeAndEndIsAfter(userId, currentDateTime, currentDateTime, pagination);
+                break;
             case PAST:
-                return bookingRepository
-                        .findBookingsByBooker_IdAndEndIsBefore(userId, now, pagination);
+                bookings = bookingRepository
+                        .findBookingsByBooker_IdAndEndIsBefore(userId, currentDateTime, pagination);
+                break;
             case FUTURE:
-                return bookingRepository
-                        .findBookingsByBooker_IdAndStartIsAfter(userId, now, pagination);
+                bookings = bookingRepository
+                        .findBookingsByBooker_IdAndStartIsAfter(userId, currentDateTime, pagination);
+                break;
             default:
                 throw new WrongBookingStateException("Unknown state: " + state);
         }
+
+        return bookings.stream()
+                .map(BookingMapper::bookingToDto)
+                .collect(Collectors.toList());
     }
 
-    public List<Booking> getBookingsByItemOwner(BookingState state, long userId, int from, int size) {
+    public List<BookingResponseDto> getBookingsByItemOwner(BookingState state, long userId, int from, int size) {
         getUserById(userId);
+
         List<Long> userItemsId = itemRepository
                 .findItemsByOwner_Id(userId).stream()
                 .map(Item::getId)
                 .collect(Collectors.toList());
         Pageable pagination = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "start"));
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        List<Booking> bookings;
 
         if (userItemsId.isEmpty()) {
             return Collections.emptyList();
@@ -101,30 +117,41 @@ public class BookingService {
 
         switch (state) {
             case ALL:
-                return bookingRepository
+                bookings = bookingRepository
                         .findBookingsByItem_IdIn(userItemsId, pagination);
+                break;
             case WAITING:
-                return bookingRepository
+                bookings = bookingRepository
                         .findBookingsByItem_IdInAndStatus(userItemsId, BookingStatus.WAITING, pagination);
+                break;
             case REJECTED:
-                return bookingRepository
+                bookings = bookingRepository
                         .findBookingsByItem_IdInAndStatus(userItemsId, BookingStatus.REJECTED, pagination);
+                break;
             case CURRENT:
-                return bookingRepository
-                        .findBookingsByItem_IdInAndStartIsBeforeAndEndIsAfter(userItemsId, now, now, pagination);
+                bookings = bookingRepository
+                        .findBookingsByItem_IdInAndStartIsBeforeAndEndIsAfter(userItemsId, currentDateTime, currentDateTime, pagination);
+                break;
             case PAST:
-                return bookingRepository
-                        .findBookingsByItem_IdInAndEndIsBefore(userItemsId, now, pagination);
+                bookings = bookingRepository
+                        .findBookingsByItem_IdInAndEndIsBefore(userItemsId, currentDateTime, pagination);
+                break;
             case FUTURE:
-                return bookingRepository
-                        .findBookingsByItem_IdInAndStartIsAfter(userItemsId, now, pagination);
+                bookings = bookingRepository
+                        .findBookingsByItem_IdInAndStartIsAfter(userItemsId, currentDateTime, pagination);
+                break;
             default:
                 throw new WrongBookingStateException("Unknown state: " + state);
         }
+
+        return bookings.stream()
+                .map(BookingMapper::bookingToDto)
+                .collect(Collectors.toList());
     }
 
     @Transactional
-    public Booking createBooking(long userId, Booking booking) {
+    public BookingResponseDto createBooking(long userId, BookingRequestDto bookingRequestDto) {
+        Booking booking = BookingMapper.dtoToBooking(bookingRequestDto);
         enrichBooking(userId, booking);
 
         if (!booking.getItem().isAvailable()) {
@@ -139,12 +166,14 @@ public class BookingService {
 
         booking.setStatus(BookingStatus.WAITING);
 
-        return bookingRepository.save(booking);
+        return BookingMapper.bookingToDto(bookingRepository.save(booking));
     }
 
     @Transactional
-    public Booking changeStatus(long bookingId, long userId, boolean approved) {
-        Booking booking = getBookingById(bookingId, userId);
+    public BookingResponseDto changeStatus(long bookingId, long userId, boolean approved) {
+        getUserById(userId);
+
+        Booking booking = getBookingById(bookingId);
 
         if (booking.getStatus().equals(BookingStatus.APPROVED)) {
             throw new StatusAlreadySetException("Бронирование уже было подтверждено");
@@ -163,7 +192,7 @@ public class BookingService {
             booking.setStatus(BookingStatus.REJECTED);
         }
 
-        return booking;
+        return BookingMapper.bookingToDto(booking);
     }
 
     private boolean checkItemOwner(long userId, Item item) {
@@ -188,5 +217,11 @@ public class BookingService {
         return userRepository
                 .findById(userId)
                 .orElseThrow(unitNotFoundException("Пользователь с id = {0} не найден", userId));
+    }
+
+    private Booking getBookingById(long bookingId) {
+        return bookingRepository
+                .findById(bookingId)
+                .orElseThrow(unitNotFoundException("Запись бронирования с id = {0} не найдена", bookingId));
     }
 }

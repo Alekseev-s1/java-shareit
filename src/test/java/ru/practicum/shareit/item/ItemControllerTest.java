@@ -14,10 +14,13 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import ru.practicum.shareit.exception.ItemUnavailableException;
 import ru.practicum.shareit.exception.UnitNotFoundException;
 import ru.practicum.shareit.item.dto.CommentRequestDto;
+import ru.practicum.shareit.item.dto.CommentResponseDto;
 import ru.practicum.shareit.item.dto.ItemRequestDto;
+import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemService;
+import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 
 import java.nio.charset.StandardCharsets;
@@ -42,61 +45,62 @@ public class ItemControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    private User owner;
-    private Item item;
+    private UserDto owner;
+    private ItemResponseDto itemResponseDto;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     @BeforeEach
     void setUp() {
-        owner = new User();
+        owner = new UserDto();
         owner.setId(1);
 
-        item = new Item();
-        item.setId(1);
-        item.setName("Test name");
-        item.setDescription("Test description");
-        item.setAvailable(true);
-        item.setOwner(owner);
+        itemResponseDto = ItemResponseDto.builder()
+                .id(1)
+                .name("Test name")
+                .description("Test description")
+                .available(true)
+                .owner(owner)
+                .build();
     }
 
     @Test
     void getItemsByUserTest() throws Exception {
         Mockito
                 .when(itemService.getItemsByUserId(anyLong(), anyInt(), anyInt()))
-                .thenReturn(List.of(item));
+                .thenReturn(List.of(itemResponseDto));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/items")
                         .accept(MediaType.APPLICATION_JSON)
                         .header("X-Sharer-User-Id", 1))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is(item.getId()), Long.class))
-                .andExpect(jsonPath("$[0].name", is(item.getName())))
-                .andExpect(jsonPath("$[0].description", is(item.getDescription())))
-                .andExpect(jsonPath("$[0].available", is(item.isAvailable())))
-                .andExpect(jsonPath("$[0].owner.id", is(item.getOwner().getId()), Long.class));
+                .andExpect(jsonPath("$[0].id", is(itemResponseDto.getId()), Long.class))
+                .andExpect(jsonPath("$[0].name", is(itemResponseDto.getName())))
+                .andExpect(jsonPath("$[0].description", is(itemResponseDto.getDescription())))
+                .andExpect(jsonPath("$[0].available", is(itemResponseDto.isAvailable())))
+                .andExpect(jsonPath("$[0].owner.id", is(itemResponseDto.getOwner().getId()), Long.class));
     }
 
     @Test
     void getItemByIdTest() throws Exception {
         Mockito
-                .when(itemService.getItemById(anyLong()))
-                .thenReturn(item);
+                .when(itemService.getItem(anyLong(), anyLong()))
+                .thenReturn(itemResponseDto);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/items/1")
                         .accept(MediaType.APPLICATION_JSON)
                         .header("X-Sharer-User-Id", 1))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(item.getId()), Long.class))
-                .andExpect(jsonPath("$.name", is(item.getName())))
-                .andExpect(jsonPath("$.description", is(item.getDescription())))
-                .andExpect(jsonPath("$.available", is(item.isAvailable())))
-                .andExpect(jsonPath("$.owner.id", is(item.getOwner().getId()), Long.class));
+                .andExpect(jsonPath("$.id", is(itemResponseDto.getId()), Long.class))
+                .andExpect(jsonPath("$.name", is(itemResponseDto.getName())))
+                .andExpect(jsonPath("$.description", is(itemResponseDto.getDescription())))
+                .andExpect(jsonPath("$.available", is(itemResponseDto.isAvailable())))
+                .andExpect(jsonPath("$.owner.id", is(itemResponseDto.getOwner().getId()), Long.class));
     }
 
     @Test
     void getItemNotFoundTest() throws Exception {
         Mockito
-                .when(itemService.getItemById(anyLong()))
+                .when(itemService.getItem(anyLong(), anyLong()))
                 .thenThrow(new UnitNotFoundException("Вещь с id = 1 не найдена"));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/items/1")
@@ -115,8 +119,8 @@ public class ItemControllerTest {
         requestDto.setAvailable(true);
 
         Mockito
-                .when(itemService.createItem(anyLong(), any(Item.class)))
-                .thenReturn(item);
+                .when(itemService.createItem(anyLong(), any(ItemRequestDto.class)))
+                .thenReturn(itemResponseDto);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/items")
                         .header("X-Sharer-User-Id", 1)
@@ -125,11 +129,11 @@ public class ItemControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", is(item.getId()), Long.class))
-                .andExpect(jsonPath("$.name", is(item.getName())))
-                .andExpect(jsonPath("$.description", is(item.getDescription())))
-                .andExpect(jsonPath("$.available", is(item.isAvailable())))
-                .andExpect(jsonPath("$.owner.id", is(item.getOwner().getId()), Long.class));
+                .andExpect(jsonPath("$.id", is(itemResponseDto.getId()), Long.class))
+                .andExpect(jsonPath("$.name", is(itemResponseDto.getName())))
+                .andExpect(jsonPath("$.description", is(itemResponseDto.getDescription())))
+                .andExpect(jsonPath("$.available", is(itemResponseDto.isAvailable())))
+                .andExpect(jsonPath("$.owner.id", is(itemResponseDto.getOwner().getId()), Long.class));
     }
 
     @Test
@@ -140,8 +144,8 @@ public class ItemControllerTest {
         requestDto.setAvailable(true);
 
         Mockito
-                .when(itemService.updateItem(anyLong(), anyLong(), any(Item.class)))
-                .thenReturn(item);
+                .when(itemService.updateItem(anyLong(), anyLong(), any(ItemRequestDto.class)))
+                .thenReturn(itemResponseDto);
 
         mockMvc.perform(MockMvcRequestBuilders.patch("/items/1")
                         .header("X-Sharer-User-Id", 1)
@@ -150,11 +154,11 @@ public class ItemControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(item.getId()), Long.class))
-                .andExpect(jsonPath("$.name", is(item.getName())))
-                .andExpect(jsonPath("$.description", is(item.getDescription())))
-                .andExpect(jsonPath("$.available", is(item.isAvailable())))
-                .andExpect(jsonPath("$.owner.id", is(item.getOwner().getId()), Long.class));
+                .andExpect(jsonPath("$.id", is(itemResponseDto.getId()), Long.class))
+                .andExpect(jsonPath("$.name", is(itemResponseDto.getName())))
+                .andExpect(jsonPath("$.description", is(itemResponseDto.getDescription())))
+                .andExpect(jsonPath("$.available", is(itemResponseDto.isAvailable())))
+                .andExpect(jsonPath("$.owner.id", is(itemResponseDto.getOwner().getId()), Long.class));
     }
 
     @Test
@@ -167,17 +171,17 @@ public class ItemControllerTest {
     void searchItemsTest() throws Exception {
         Mockito
                 .when(itemService.searchItem(anyString(), anyInt(), anyInt()))
-                .thenReturn(List.of(item));
+                .thenReturn(List.of(itemResponseDto));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/items/search")
                         .accept(MediaType.APPLICATION_JSON)
                         .param("text", "Test"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id", is(item.getId()), Long.class))
-                .andExpect(jsonPath("$[0].name", is(item.getName())))
-                .andExpect(jsonPath("$[0].description", is(item.getDescription())))
-                .andExpect(jsonPath("$[0].available", is(item.isAvailable())))
-                .andExpect(jsonPath("$[0].owner.id", is(item.getOwner().getId()), Long.class));
+                .andExpect(jsonPath("$[0].id", is(itemResponseDto.getId()), Long.class))
+                .andExpect(jsonPath("$[0].name", is(itemResponseDto.getName())))
+                .andExpect(jsonPath("$[0].description", is(itemResponseDto.getDescription())))
+                .andExpect(jsonPath("$[0].available", is(itemResponseDto.isAvailable())))
+                .andExpect(jsonPath("$[0].owner.id", is(itemResponseDto.getOwner().getId()), Long.class));
     }
 
     @Test
@@ -188,16 +192,15 @@ public class ItemControllerTest {
         User user = new User();
         user.setName("Test user name");
 
-        Comment comment = new Comment();
-        comment.setId(1);
-        comment.setText("Test text");
-        comment.setItem(item);
-        comment.setAuthor(user);
-        comment.setCreatedAt(LocalDateTime.now());
+        CommentResponseDto commentResponseDto = new CommentResponseDto();
+        commentResponseDto.setId(1);
+        commentResponseDto.setText("Test text");
+        commentResponseDto.setAuthorName(user.getName());
+        commentResponseDto.setCreated(LocalDateTime.parse(LocalDateTime.now().format(formatter)));
 
         Mockito
-                .when(itemService.addComment(anyLong(), anyLong(), any(Comment.class)))
-                .thenReturn(comment);
+                .when(itemService.addComment(anyLong(), anyLong(), any(CommentRequestDto.class)))
+                .thenReturn(commentResponseDto);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/items/1/comment")
                         .header("X-Sharer-User-Id", 1)
@@ -206,10 +209,10 @@ public class ItemControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(comment.getId()), Long.class))
-                .andExpect(jsonPath("$.text", is(comment.getText())))
-                .andExpect(jsonPath("$.authorName", is(comment.getAuthor().getName())))
-                .andExpect(jsonPath("$.created", is(comment.getCreatedAt().format(formatter))));
+                .andExpect(jsonPath("$.id", is(commentResponseDto.getId()), Long.class))
+                .andExpect(jsonPath("$.text", is(commentResponseDto.getText())))
+                .andExpect(jsonPath("$.authorName", is(commentResponseDto.getAuthorName())))
+                .andExpect(jsonPath("$.created", is(commentResponseDto.getCreated().format(formatter))));
     }
 
     @Test
@@ -218,7 +221,7 @@ public class ItemControllerTest {
         commentRequestDto.setText("Test text");
 
         Mockito
-                .when(itemService.addComment(anyLong(), anyLong(), any(Comment.class)))
+                .when(itemService.addComment(anyLong(), anyLong(), any(CommentRequestDto.class)))
                 .thenThrow(new ItemUnavailableException("Пользователь с id = 1 не может оставить комментарий к вещи с id = 1, так как еще не бронировал ее"));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/items/1/comment")

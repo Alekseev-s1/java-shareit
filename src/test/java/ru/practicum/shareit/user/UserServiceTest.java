@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.exception.UnitNotFoundException;
+import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.service.UserService;
@@ -17,6 +18,7 @@ import java.util.Optional;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,7 +47,7 @@ public class UserServiceTest {
                 .when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.of(new User()));
 
-        userService.getUserById(1);
+        userService.getUser(1);
 
         Mockito.verify(userRepository).findById(1L);
         Mockito.verifyNoMoreInteractions(userRepository);
@@ -54,7 +56,7 @@ public class UserServiceTest {
     @Test
     void getNotFoundUserTest() {
         Exception exception = assertThrows(UnitNotFoundException.class,
-                () -> userService.getUserById(1));
+                () -> userService.getUser(1));
         assertThat(exception.getMessage(), equalTo("Пользователь с id = 1 не найден"));
 
         Mockito.verify(userRepository).findById(1L);
@@ -63,11 +65,20 @@ public class UserServiceTest {
 
     @Test
     void createUserTest() {
+        UserDto userDto = new UserDto();
+        userDto.setName("Test user");
+        userDto.setEmail("test@test.com");
+
         User user = new User();
+        user.setId(1);
         user.setName("Test user");
         user.setEmail("test@test.com");
 
-        userService.createUser(user);
+        Mockito
+                .when(userRepository.save(any(User.class)))
+                .thenReturn(user);
+
+        userService.createUser(userDto);
 
         ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
 
@@ -75,8 +86,8 @@ public class UserServiceTest {
 
         User capturedUser = userArgumentCaptor.getValue();
 
-        assertThat(capturedUser.getName(), equalTo(user.getName()));
-        assertThat(capturedUser.getEmail(), equalTo(user.getEmail()));
+        assertThat(capturedUser.getName(), equalTo(userDto.getName()));
+        assertThat(capturedUser.getEmail(), equalTo(userDto.getEmail()));
         Mockito.verifyNoMoreInteractions(userRepository);
     }
 
@@ -86,14 +97,14 @@ public class UserServiceTest {
                 .when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.of(new User()));
 
-        User user = new User();
-        user.setName("Test user");
-        user.setEmail("test@test.com");
+        UserDto userDto = new UserDto();
+        userDto.setName("Test user");
+        userDto.setEmail("test@test.com");
 
-        User updatedUser = userService.updateUser(1, user);
+        UserDto updatedUser = userService.updateUser(1, userDto);
 
-        assertThat(user.getName(), equalTo(updatedUser.getName()));
-        assertThat(user.getEmail(), equalTo(updatedUser.getEmail()));
+        assertThat(userDto.getName(), equalTo(updatedUser.getName()));
+        assertThat(userDto.getEmail(), equalTo(updatedUser.getEmail()));
     }
 
     @Test

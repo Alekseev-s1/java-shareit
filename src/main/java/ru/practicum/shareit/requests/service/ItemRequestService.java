@@ -5,12 +5,16 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.requests.dto.ItemReqRequestDto;
+import ru.practicum.shareit.requests.dto.ItemReqResponseDto;
+import ru.practicum.shareit.requests.mapper.ItemRequestMapper;
 import ru.practicum.shareit.requests.model.ItemRequest;
 import ru.practicum.shareit.requests.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static ru.practicum.shareit.exception.UnitNotFoundException.unitNotFoundException;
 
@@ -27,27 +31,38 @@ public class ItemRequestService {
         this.userRepository = userRepository;
     }
 
-    public ItemRequest getItemRequestById(long itemRequestId) {
-        return itemRequestRepository
+    public ItemReqResponseDto getItemRequestById(long itemRequestId, long userId) {
+        getUserById(userId);
+        ItemRequest itemRequest = itemRequestRepository
                 .findById(itemRequestId)
                 .orElseThrow(unitNotFoundException("Запрос с id = {0} не найден", itemRequestId));
+        return ItemRequestMapper.itemRequestToDto(itemRequest);
     }
 
-    public List<ItemRequest> getItemRequestsByUser(long userId) {
+    public List<ItemReqResponseDto> getItemRequestsByUser(long userId) {
+        getUserById(userId);
         return itemRequestRepository
-                .findItemRequestsByRequestor_Id(userId, Sort.by(Sort.Direction.DESC, "created"));
+                .findItemRequestsByRequestor_Id(userId, Sort.by(Sort.Direction.DESC, "created"))
+                .stream()
+                .map(ItemRequestMapper::itemRequestToDto)
+                .collect(Collectors.toList());
     }
 
-    public List<ItemRequest> getItemRequests(long userId, int from, int size) {
-        return itemRequestRepository.findItemRequestsByRequestor_IdIsNot(userId,
-                PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "created")));
+    public List<ItemReqResponseDto> getItemRequests(long userId, int from, int size) {
+        getUserById(userId);
+        return itemRequestRepository
+                .findItemRequestsByRequestor_IdIsNot(userId, PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "created")))
+                .stream()
+                .map(ItemRequestMapper::itemRequestToDto)
+                .collect(Collectors.toList());
     }
 
     @Transactional
-    public ItemRequest createItemRequest(long userId, ItemRequest itemRequest) {
+    public ItemReqResponseDto createItemRequest(long userId, ItemReqRequestDto itemReqRequestDto) {
+        ItemRequest itemRequest = ItemRequestMapper.dtoToItemRequest(itemReqRequestDto);
         User user = getUserById(userId);
         itemRequest.setRequestor(user);
-        return itemRequestRepository.save(itemRequest);
+        return ItemRequestMapper.itemRequestToDto(itemRequestRepository.save(itemRequest));
     }
 
     private User getUserById(long userId) {
