@@ -28,6 +28,5 @@ public class ItemRequest {
 
     @OneToMany(mappedBy = "request")
     private List<Item> items;
-
     private LocalDateTime created = LocalDateTime.now();
 }

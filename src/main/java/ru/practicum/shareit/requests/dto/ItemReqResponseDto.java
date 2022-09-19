@@ -1,5 +1,8 @@
 package ru.practicum.shareit.requests.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,6 +15,9 @@ import java.util.List;
 public class ItemReqResponseDto {
     private long id;
     private String description;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime created;
     private List<Item> items;
 

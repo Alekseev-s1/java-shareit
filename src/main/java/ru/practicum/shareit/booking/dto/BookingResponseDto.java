@@ -1,5 +1,8 @@
 package ru.practicum.shareit.booking.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
@@ -14,7 +17,13 @@ import java.time.LocalDateTime;
 public class BookingResponseDto {
     private long id;
     private Item item;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime start;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime end;
     private Booker booker;
     private BookingStatus status;

@@ -6,8 +6,6 @@ import ru.practicum.shareit.requests.dto.ItemReqRequestDto;
 import ru.practicum.shareit.requests.dto.ItemReqResponseDto;
 import ru.practicum.shareit.requests.model.ItemRequest;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -21,12 +19,10 @@ public class ItemRequestMapper {
 
     public static ItemReqResponseDto itemRequestToDto(ItemRequest itemRequest) {
         ItemReqResponseDto itemRequestDto = new ItemReqResponseDto();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
-        String created = itemRequest.getCreated().format(formatter);
 
         itemRequestDto.setId(itemRequest.getId());
         itemRequestDto.setDescription(itemRequest.getDescription());
-        itemRequestDto.setCreated(LocalDateTime.parse(created));
+        itemRequestDto.setCreated(itemRequest.getCreated());
 
         if (itemRequest.getItems() != null) {
             itemRequestDto.setItems(
