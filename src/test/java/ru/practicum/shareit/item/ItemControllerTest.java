@@ -194,7 +194,7 @@ public class ItemControllerTest {
         commentResponseDto.setId(1);
         commentResponseDto.setText("Test text");
         commentResponseDto.setAuthorName(user.getName());
-        commentResponseDto.setCreated(LocalDateTime.parse(LocalDateTime.now().format(formatter)));
+        commentResponseDto.setCreated(LocalDateTime.now());
 
         Mockito
                 .when(itemService.addComment(anyLong(), anyLong(), any(CommentRequestDto.class)))

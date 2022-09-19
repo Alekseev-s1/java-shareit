@@ -56,7 +56,7 @@ public class ItemRequestControllerTest {
         itemRequestDto.setId(1);
         itemRequestDto.setDescription("Test description");
         itemRequestDto.setItems(List.of(item));
-        itemRequestDto.setCreated(LocalDateTime.parse(LocalDateTime.now().format(formatter)));
+        itemRequestDto.setCreated(LocalDateTime.now());
     }
 
     @Test

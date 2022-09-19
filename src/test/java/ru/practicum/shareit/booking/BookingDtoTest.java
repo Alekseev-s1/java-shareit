@@ -10,6 +10,7 @@ import ru.practicum.shareit.booking.model.BookingStatus;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,6 +18,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class BookingDtoTest {
     @Autowired
     private JacksonTester<BookingResponseDto> json;
+
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     @Test
     void bookingDtoTest() throws IOException {
@@ -39,6 +42,8 @@ public class BookingDtoTest {
         assertThat(result).extractingJsonPathStringValue("$.item.name").isEqualTo(bookingDto.getItem().getName());
         assertThat(result).extractingJsonPathNumberValue("$.booker.id").isEqualTo((int) bookingDto.getBooker().getId());
         assertThat(result).extractingJsonPathStringValue("$.booker.name").isEqualTo(bookingDto.getBooker().getName());
+        assertThat(result).extractingJsonPathStringValue("$.start").isEqualTo(bookingDto.getStart().format(formatter));
+        assertThat(result).extractingJsonPathStringValue("$.end").isEqualTo(bookingDto.getEnd().format(formatter));
         assertThat(result).extractingJsonPathStringValue("$.status").isEqualTo(bookingDto.getStatus().name());
     }
 }
