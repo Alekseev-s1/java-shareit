@@ -18,4 +18,6 @@ public class ItemRequestDto {
 
     @NotNull(groups = OnCreate.class, message = "Параметр available не может быть пустым")
     private Boolean available;
+
+    private Long requestId;
 }

@@ -12,10 +12,6 @@ public class UnitNotFoundException extends RuntimeException {
         super(MessageFormat.format(message, id));
     }
 
-    public static Supplier<UnitNotFoundException> unitNotFoundException(String message) {
-        return () -> new UnitNotFoundException(message);
-    }
-
     public static Supplier<UnitNotFoundException> unitNotFoundException(String message, long id) {
         return () -> new UnitNotFoundException(message, id);
     }
