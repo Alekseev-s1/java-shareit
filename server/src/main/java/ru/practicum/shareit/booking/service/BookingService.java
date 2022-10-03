@@ -160,9 +160,6 @@ public class BookingService {
         if (booking.getItem().getOwner().getId() == userId) {
             throw new WrongOwnerException("Владелец вещи не может ее забронировать");
         }
-        if (!booking.getStart().isBefore(booking.getEnd())) {
-            throw new CrossDateException("Дата окончания бронирования меньше даты начала бронирования");
-        }
 
         booking.setStatus(BookingStatus.WAITING);
 

@@ -489,38 +489,6 @@ public class BookingServiceTest {
     }
 
     @Test
-    void createBookingWrongDateTest() {
-        User booker = new User();
-        booker.setId(1);
-
-        User itemOwner = new User();
-        itemOwner.setId(2);
-
-        Item item = new Item();
-        item.setId(1);
-        item.setOwner(itemOwner);
-        item.setAvailable(true);
-
-        BookingRequestDto bookingRequestDto = new BookingRequestDto();
-        bookingRequestDto.setItemId(item.getId());
-        bookingRequestDto.setStart(LocalDateTime.now().plusDays(2));
-        bookingRequestDto.setEnd(LocalDateTime.now().minusDays(2));
-
-        Mockito
-                .when(userRepository.findById(anyLong()))
-                .thenReturn(Optional.of(booker));
-        Mockito
-                .when(itemRepository.findById(anyLong()))
-                .thenReturn(Optional.of(item));
-
-        Exception exception = assertThrows(CrossDateException.class,
-                () -> bookingService.createBooking(1, bookingRequestDto));
-        assertThat(exception.getMessage(), equalTo("Дата окончания бронирования меньше даты начала бронирования"));
-
-        Mockito.verifyNoMoreInteractions(bookingRepository, itemRepository, userRepository);
-    }
-
-    @Test
     void changeStatusApprovedTest() {
         User user = new User();
         user.setId(1);

@@ -7,6 +7,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingState;
+import ru.practicum.shareit.exception.CrossDateException;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
@@ -53,6 +54,7 @@ public class BookingController {
     public ResponseEntity<Object> createBooking(@RequestHeader("X-Sharer-User-Id") long userId,
                                                 @RequestBody @Valid BookingRequestDto bookingDto) {
         log.info("Creating booking {}, userId={}", bookingDto, userId);
+        checkBookingDate(bookingDto);
         return bookingClient.createBooking(userId, bookingDto);
     }
 
@@ -62,5 +64,11 @@ public class BookingController {
                                                @RequestParam boolean approved) {
         log.info("Changing booking status bookingId={}, userId={}, status={}", bookingId, userId, approved);
         return bookingClient.changeStatus(userId, bookingId, approved);
+    }
+
+    private void checkBookingDate(BookingRequestDto bookingRequestDto) {
+        if (!bookingRequestDto.getStart().isBefore(bookingRequestDto.getEnd())) {
+            throw new CrossDateException("Дата окончания бронирования меньше даты начала бронирования");
+        }
     }
 }
